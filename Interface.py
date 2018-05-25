@@ -8,7 +8,6 @@ import requests
 #figure out how to arrange. This is also my first gui program so bear with.  :) - Cameron
 
 
-
 class search():
     def __init__(self, budget, bchoices):
         geturl = requests.get("https://www.techbargains.com/category/359/computers/laptops").text
@@ -317,9 +316,7 @@ class parameterscreen:
         searchbutton.place(x=450, y=260)
 
 
-
     # how does this class work without me calling self.p_root.mainloop() ?
-
 
 
 class screen:
