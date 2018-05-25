@@ -45,18 +45,14 @@ class search():
             self.tbpriceposition += 1
 
             if self.tbpriceposition in self.tb_titleposition_compare:
-
                 tbrawprice = y.text[2:]
-
 
                 if len(tbrawprice) == 6:
                     self.tbprice.append(int(tbrawprice[0:3]))
 
-
                 elif len(tbrawprice) == 8:
                     #deletes the comma
                     self.tbprice.append(int(tbrawprice[0] + tbrawprice[2:5]))
-
 
                 else:
                     self.tbprice.append("price unavailable")
