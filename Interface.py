@@ -7,28 +7,70 @@ import requests
 #  This is the first program I spent a lot of time trying to
 #figure out how to arrange. This is also my first gui program so bear with.  :) - Cameron
 
+
+
 class search():
-    def __init__(self,budget,choices):
-        self.url = "https://www.ebay.com/sch/i.html?_from=R40&_sacat=0&_nkw=laptops&rt=nc&LH_BIN=1"
-        self.htmlfetch = requests.get(self.url).text
-        self.soup = bs(self.htmlfetch, "html.parser")
-        self.pricenumber = 0
-        self.budget = budget
-        print choices
+    def __init__(self, budget, bchoices):
+        geturl = requests.get("https://www.techbargains.com/category/359/computers/laptops").text
+        self.soup = bs(geturl, "html.parser")
+
+        self.computerbudget = budget
+        self.computerbrandchoices = bchoices
+
+        self.tbtitles = []
+        self.tbtitleposition = 0
+        self.tb_titleposition_compare = []
+
+        self.tbprice = []
+        self.tbpriceposition = 0
+
+        self.laptoplistings = {}
+
+    def techbargain(self):
+        #gets techbargain titles
+        for t in self.soup.find_all("a", class_ = "details hidden-xs"):
+            self.tbtitleposition += 1
+
+            stringtitles = str(t["title"])
+            rawtitles = stringtitles.split()
+
+            for titles in rawtitles:
+                if titles in self.computerbrandchoices:
+                    self.tbtitles.append(t["title"])
+                    self.tb_titleposition_compare.append(self.tbtitleposition)
 
 
-    def finder(self):
-        for p in self.soup.find_all("span", class_ = "bold"):
+        #gets techbargain prices
+        for y in self.soup.find_all("span", class_ = "final-price"):
+            self.tbpriceposition += 1
 
-            #Just lists the prices from the ebay search, have not started working on the search
-            #part of the program yet.
-            rawtext = str(p.text)
+            if self.tbpriceposition in self.tb_titleposition_compare:
 
-            price = int(rawtext[7:10])
+                tbrawprice = y.text[2:]
 
 
-            if self.budget > price:
-                print "Taco"
+                if len(tbrawprice) == 6:
+                    self.tbprice.append(int(tbrawprice[0:3]))
+
+
+                elif len(tbrawprice) == 8:
+                    #deletes the comma
+                    self.tbprice.append(int(tbrawprice[0] + tbrawprice[2:5]))
+
+
+                else:
+                    self.tbprice.append("price unavailable")
+
+
+    def compare(self):
+        #loop through the techbargain title and price lists and adds there values to a dictionary
+        # if the price is less or equal to the set budget
+        for c in range(len(self.tbtitles)):
+            if self.tbprice[c] <= self.computerbudget:
+                self.laptoplistings[self.tbtitles[c]] = self.tbprice[c]
+
+
+        print self.laptoplistings
 
 
     def searchscreen(self):
@@ -38,9 +80,11 @@ class search():
 
         self.searchtitle = Tkinter.Label(self.searchscreen, text="Search Results", bg="white", font="fixedsys")
         self.searchtitle.pack(fill=Tkinter.X)
-        self.finder()
 
+        self.techbargain()
+        self.compare()
         self.searchscreen.mainloop()
+
 
 
 class parameterscreen:
@@ -339,4 +383,3 @@ class screen:
 Interface1 = screen()
 Interface1.startscreen()
 Interface1.root.mainloop()
-
