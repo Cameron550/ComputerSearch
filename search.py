@@ -8,9 +8,15 @@ import requests
 #figure out how to arrange. This is also my first gui program so bear with.  :) - Cameron
 
 
-class search():
+class search():                #brandchoices
     def __init__(self, budget, bchoices):
-        geturl = requests.get("https://www.techbargains.com/category/359/computers/laptops").text
+
+        if Interface1.laptopordesktop == "laptop":
+            geturl = requests.get("https://www.techbargains.com/category/359/computers/laptops").text
+
+        elif Interface1.laptopordesktop == "desktop":
+            geturl = requests.get("https://www.techbargains.com/category/357/computers/desktops").text
+
         self.soup = bs(geturl, "html.parser")
 
         self.computerbudget = budget
@@ -84,12 +90,13 @@ class search():
 
 class parameterscreen:
 
-    def __init__(self, txt="What brand of Desktop would you like to find?"):
+    def __init__(self, txt):
         #if i use Tkinter.Tk() for the parameter screen root the images dont work?
         self.p_root = Tkinter.Toplevel()
         self.p_root.title("Pc finder")
         self.p_root.geometry("540x300")
         self.budget1 = 0
+
 
         self.brandchoices = []
 
@@ -98,9 +105,9 @@ class parameterscreen:
 
 
     def range(self):
-        self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2500, label="Budget", fg="darkgrey",
+        self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2000, label="Budget", fg="darkgrey",
                                         orient=Tkinter.VERTICAL, length=250,
-                                        sliderlength=20, bd=1, font="fixedsys",
+                                        sliderlength=12, bd=1, font="fixedsys",
                                         )
 
         self.pricerange.pack()
@@ -139,7 +146,7 @@ class parameterscreen:
         self.hpbrand = Tkinter.Button(self.p_root, image=self.hpimg, bd = 0, command = hpimgchg)
         self.hpbrand.image = self.hpimg
         self.hpbrand.pack()
-        self.hpbrand.place(x=140, y=70)
+        self.hpbrand.place(x=140, y=80)
 
         #Same as above. Repeats 4 more times
         def dellimgchg():
@@ -161,7 +168,7 @@ class parameterscreen:
         self.dellbrand = Tkinter.Button(self.p_root, image=self.dellimg, bd=0, command=dellimgchg)
         self.dellbrand.image = self.dellimg
         self.dellbrand.pack()
-        self.dellbrand.place(x=210, y=70)
+        self.dellbrand.place(x=210, y=80)
 
 
         def appleimgchg():
@@ -183,7 +190,7 @@ class parameterscreen:
         self.applebrand = Tkinter.Button(self.p_root, image=self.appleimg, bd=0, command=appleimgchg)
         self.applebrand.image = self.appleimg
         self.applebrand.pack()
-        self.applebrand.place(x=280, y=70)
+        self.applebrand.place(x=280, y=80)
 
 
         def microsoftimgchg():
@@ -205,7 +212,7 @@ class parameterscreen:
         self.microsoftbrand = Tkinter.Button(self.p_root, image=self.microsoftimg, bd=0, command=microsoftimgchg)
         self.microsoftbrand.image = self.microsoftimg
         self.microsoftbrand.pack()
-        self.microsoftbrand.place(x=350, y=70)
+        self.microsoftbrand.place(x=350, y=80)
 
 
         def lenovoimgchg():
@@ -227,7 +234,7 @@ class parameterscreen:
         self.lenovobrand = Tkinter.Button(self.p_root, image=self.lenovoimg, bd=0, command=lenovoimgchg)
         self.lenovobrand.image = self.lenovoimg
         self.lenovobrand.pack()
-        self.lenovobrand.place(x=140, y=140)
+        self.lenovobrand.place(x=140, y=150)
 
 
         def acerimgchg():
@@ -249,7 +256,7 @@ class parameterscreen:
         self.acerbrand = Tkinter.Button(self.p_root, image=self.acerimg, bd=0, command=acerimgchg)
         self.acerbrand.image = self.acerimg
         self.acerbrand.pack()
-        self.acerbrand.place(x=210, y=140)
+        self.acerbrand.place(x=210, y=150)
 
 
         def razerimgchg():
@@ -271,7 +278,7 @@ class parameterscreen:
         self.razerbrand = Tkinter.Button(self.p_root, image=self.razerimg, bd=0, command=razerimgchg)
         self.razerbrand.image = self.razerimg
         self.razerbrand.pack()
-        self.razerbrand.place(x=280, y=140)
+        self.razerbrand.place(x=280, y=150)
 
 
         def msiimgchg():
@@ -293,13 +300,7 @@ class parameterscreen:
         self.msibrand = Tkinter.Button(self.p_root, image=self.msiimg, bd=0, command=msiimgchg)
         self.msibrand.image = self.msiimg
         self.msibrand.pack()
-        self.msibrand.place(x=350, y=140)
-
-
-    def paramterwidgets(self):
-        self.choosecomputerbrand()
-        self.range()
-        self.findbutton()
+        self.msibrand.place(x=350, y=150)
 
 
     def findbutton(self):
@@ -316,12 +317,23 @@ class parameterscreen:
         searchbutton.place(x=450, y=260)
 
 
+
+    def paramterwidgets(self):
+        self.choosecomputerbrand()
+        self.range()
+        self.findbutton()
+
+
     # how does this class work without me calling self.p_root.mainloop() ?
 
 
 class screen:
-    #startupscreen and its widgets
+    def __init__(self):
+        print "tacos"
+        self.laptopordesktop = ""
+    # startupscreen and its widgets
     def startscreen(self):
+
         self.root = Tkinter.Tk()
         self.root.title("Pc finder")
         self.root.geometry("440x200")
@@ -332,6 +344,7 @@ class screen:
 
         self.dtImageLd = ImageTk.PhotoImage(Image.open("programphotos/desktop.png"))
         self.ltImageLd = ImageTk.PhotoImage(Image.open("programphotos/laptop.png"))
+
 
         label1 = Tkinter.Label(self.root, font="fixedsys", text="What kind of computer would you like to find?",
                                width=40, bg="white")
@@ -347,7 +360,8 @@ class screen:
 
         def Dtchangescreen():
             #starts parameter screen(desktop version).
-            parameterscreen1 = parameterscreen()
+            self.laptopordesktop = "desktop"
+            parameterscreen1 = parameterscreen("What kind of desktop would you like to find?")
             parameterscreen1.paramterwidgets()
 
         # Buttons
@@ -359,7 +373,8 @@ class screen:
 
         def Ltchangescreen():
             #starts parameter screen(laptop version)
-            parameterscreen1 = parameterscreen()
+            self.laptopordesktop = "laptop"
+            parameterscreen1 = parameterscreen("What kind of laptop would you like to find?")
             parameterscreen1.paramterwidgets()
 
         b2 = Tkinter.Button(self.root, font="fixedsys", text="Laptops",
@@ -368,8 +383,8 @@ class screen:
 
         b2.pack()
         b2.place(x=305, y=160)
-        #
 
+        #
 
 
 #starts the startup screen
