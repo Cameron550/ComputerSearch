@@ -11,11 +11,20 @@ import requests
 class search():                #brandchoices
     def __init__(self, budget, bchoices):
 
+        self.srchscreen = Tkinter.Toplevel()
+        self.srchscreen.geometry("650x300")
+        self.srchscreen.title("searchresults")
+
+        self.srchtitle = Tkinter.Label(self.srchscreen, text="Search Results", bg="white", font="fixedsys")
+        self.srchtitle.pack(fill=Tkinter.X)
+
+
         if Interface1.laptopordesktop == "laptop":
             geturl = requests.get("https://www.techbargains.com/category/359/computers/laptops").text
 
         elif Interface1.laptopordesktop == "desktop":
             geturl = requests.get("https://www.techbargains.com/category/357/computers/desktops").text
+
 
         self.soup = bs(geturl, "html.parser")
 
@@ -30,6 +39,8 @@ class search():                #brandchoices
         self.tbpriceposition = 0
 
         self.laptoplistings = {}
+        self.listingposition = 0
+
 
     def techbargain(self):
         #gets techbargain titles
@@ -64,28 +75,72 @@ class search():                #brandchoices
 
 
     def compare(self):
-        #loop through the techbargain title and price lists and adds there values to a dictionary
+        # loop through the techbargain title and price lists and adds there values to a dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.tbtitles)):
             if self.tbprice[c] <= self.computerbudget:
                 self.laptoplistings[self.tbtitles[c]] = self.tbprice[c]
 
 
-        print self.laptoplistings
-
-
     def searchscreen(self):
-        self.searchscreen = Tkinter.Tk()
-        self.searchscreen.geometry("550x300")
-        self.searchscreen.title("searchresults")
-
-        self.searchtitle = Tkinter.Label(self.searchscreen, text="Search Results", bg="white", font="fixedsys")
-        self.searchtitle.pack(fill=Tkinter.X)
-
         self.techbargain()
         self.compare()
-        self.searchscreen.mainloop()
 
+        listingposition = 0
+        if len(self.laptoplistings.keys()) == 0:
+            noresults = Tkinter.Label(self.srchscreen, text="Sorry, there were no results for your brands within that price range",
+                                      font="fixedsys", fg="darkgrey")
+            noresults.pack()
+            noresults.place(x = 52, y = 75)
+
+            sadsmileyLd = ImageTk.PhotoImage(Image.open("programphotos/sad.png"))
+
+            sadsmiley = Tkinter.Label(self.srchscreen, image = sadsmileyLd)
+            sadsmiley.image = sadsmileyLd
+            sadsmiley.pack()
+            sadsmiley.place(x = 290, y = 120)
+
+        else:
+
+            try:
+
+                resulttop = Tkinter.Label(self.srchscreen, text = str(self.laptoplistings.keys()[0]),
+                                          fg = "darkgrey", font = "fixedsys")
+                resulttop.pack()
+
+                resultcenter = Tkinter.Label(self.srchscreen, text = str(self.laptoplistings.keys()[1]),
+                                             fg = "darkgrey", font = "fixedsys")
+                resultcenter.pack()
+
+                resultbottom = Tkinter.Label(self.srchscreen, text = str(self.laptoplistings.keys()[2]),
+                                             fg="darkgrey", font="fixedsys")
+                resultbottom.pack()
+
+            except:
+
+                fewresults = Tkinter.Label(self.srchscreen, text = "To get more results try expanding your brand choices and budget")
+                fewresults.pack()
+
+
+            def morelistings():
+                self.listingposition += 3
+                print self.listingposition
+
+                try:
+                    resulttop.config(text = str(self.laptoplistings.keys()[0 + self.listingposition]))
+                    resultcenter.config(text=str(self.laptoplistings.keys()[1 + self.listingposition]))
+                    resultbottom.config(text=str(self.laptoplistings.keys()[2 + self.listingposition]))
+
+                except:
+                    listingrunout = Tkinter.Label(self.srchscreen, text = "Sorry no more listings available.")
+                    listingrunout.pack()
+                    listingrunout.place(x=120, y=280)
+
+
+            moreresultsbutton = Tkinter.Button(self.srchscreen, text = "More results", command = morelistings)
+            moreresultsbutton.pack()
+
+            self.srchscreen.mainloop()
 
 
 class parameterscreen:
@@ -376,6 +431,7 @@ class screen:
             self.laptopordesktop = "laptop"
             parameterscreen1 = parameterscreen("What kind of laptop would you like to find?")
             parameterscreen1.paramterwidgets()
+
 
         b2 = Tkinter.Button(self.root, font="fixedsys", text="Laptops",
                             bg=self.defaultbg, command=Ltchangescreen
