@@ -1,0 +1,10 @@
+Project running on python 2.7.13
+
+Module requirments:
+Tkinter
+PIL - Image and ImageTk
+BeautifulSoup in Bs4 dummy package
+requests
+urllib
+random
+os
