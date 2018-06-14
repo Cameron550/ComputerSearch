@@ -91,15 +91,16 @@ class search():  # brandchoices
 
         # gets techbargain images
         for u in self.soup.find_all("img"):
-            try:
-                for p in self.tbtitles:
+            for p in self.tbtitles:
+                #if image title is the same as techbargian title add the image to the list of images to load
+                try:
                     if p == str(u["alt"]):
                         rawimg = str(u["src"])
                         self.imglist.append(rawimg)
                         print u["alt"]
 
-            except:
-                print "tacos"
+                except:
+                    print "wrong image"
 
     def compare(self):
         # loop through the techbargain title and price lists and adds the title and photo to the dictionary
@@ -210,7 +211,7 @@ class parameterscreen:
         self.brandchoices = []
         #loads and displays the parameterscreen title
         paramlabel = Tkinter.Label(self.p_root, font="fixedsys", text=txt, bg="white")
-        paramlabel.pack()
+        paramlabel.pack(fill = Tkinter.BOTH)
     #function for the parameter screen budget scale
     def range(self):
         self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2000, label="Budget", fg="darkgrey",
