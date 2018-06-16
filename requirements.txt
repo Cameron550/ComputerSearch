@@ -8,3 +8,5 @@ requests
 urllib
 random
 os
+
+A stable internet connection is also required to run this program.
