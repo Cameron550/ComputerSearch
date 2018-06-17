@@ -5,6 +5,7 @@ import requests
 import urllib
 import random
 import os
+import webbrowser
 
 
 # I know this my code format is probably confusing.Id also advise reading the code from the bottom to the top
@@ -16,7 +17,7 @@ class search():  # brandchoices
     def __init__(self, budget, bchoices):
 
         self.searchscreen_root = Tkinter.Toplevel()
-        self.searchscreen_root.geometry("700x300")
+        self.searchscreen_root.geometry("600x300")
         self.searchscreen_root.title("searchresults")
 
         self.searchtitle = Tkinter.Label(self.searchscreen_root, text="Search Results", bg="white", font="fixedsys")
@@ -41,12 +42,13 @@ class search():  # brandchoices
 
         self.tbprice = []
         self.tbpriceposition = 0
+
+        self.tbrawlinks = []
+        self.tblinks = []
         #variable for the compare object
         self.laptoplistings = {}
 
         self.listingposition = 0
-        self.listingincrease = 1
-        self.listingdecrease = 1
 
         self.imglist = []
         self.imglistposition = 0
@@ -62,12 +64,18 @@ class search():  # brandchoices
             #Asks if the last 4 letters of the title is "MORE", This is a fail safe to make sure
             #every title has a price that accompanies it.
             if str(t["title"][-4:]) != "MORE":
-                self.tbtitleposition += 1
+                #quick fix for a title that has no price, cant figure out solution to root these out yet.
+                if "E3" in t["title"].split():
+                    print "nope"
+                #
+                else:
+                    self.tbtitleposition += 1
 
-                for titlekeywords in rawtitles:
-                    if titlekeywords in self.computerbrandchoices:
-                        self.tbtitles.append(t["title"])
-                        self.tb_titleposition_compare.append(self.tbtitleposition)
+                    for titlekeywords in rawtitles:
+                        if titlekeywords in self.computerbrandchoices:
+                            self.tbtitles.append(t["title"])
+                            self.tbrawlinks.append(t["href"])
+                            self.tb_titleposition_compare.append(self.tbtitleposition)
 
         # gets techbargain prices
         for y in self.soup.find_all("span", class_="final-price"):
@@ -107,29 +115,51 @@ class search():  # brandchoices
         # if the price is less or equal to the set budget
         for c in range(len(self.tbtitles)):
             if self.tbprice[c] <= self.computerbudget:
-                self.laptoplistings[self.tbtitles[c]] = self.imglist[c]
+                self.laptoplistings[self.tbtitles[c]] = [self.imglist[c], self.tbrawlinks[c]]
 
+        print len(self.laptoplistings.keys())
     def searchscreen(self):
         self.techbargain()
         self.compare()
 
+        def openlink():
+            # link to listings
+            webbrowser.open_new("https://www.techbargains.com" + str(self.laptoplistings.values()[self.listingposition][1]))
+
+        linkbutton = Tkinter.Button(self.searchscreen_root,
+                                    text="https://www.techbargains.com" + str(self.laptoplistings.values()[0][1]),
+                                    fg="darkgrey", bd=0, command=openlink)
+        linkbutton.pack(side = Tkinter.BOTTOM)
+
+        def link():
+            linkbutton.config(text = "https://www.techbargains.com" + str(self.laptoplistings.values()[self.listingposition][1]))
+
         try:
             #loads and displays the first image and title then deletes the image so its not saved on the hard drive
-            result_title = Tkinter.Label(self.searchscreen_root, text=str(self.tbtitles[0]),
-                                         fg="darkgrey", font=("arial", 10), width=0)
+            result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
+                                         fg="darkgrey", font=("arial", 8), width=0)
             result_title.pack()
 
-            urllib.urlretrieve("https:" + self.laptoplistings.values()[0], "firstphoto" + ".jpg")
+            urllib.urlretrieve("https:" + self.laptoplistings.values()[self.listingposition][0], "firstphoto" + ".jpg")
 
             # loads and displays the starting image
             firstphotoLd = ImageTk.PhotoImage(Image.open("firstphoto" + ".jpg"))
             photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
             photo.image = firstphotoLd
+
+
             photo.pack()
-            photo.place(x=140, y=65)
+            photo.place(x=100, y=65)
             # Removes the photo from laptopfinder file.
             os.remove("firstphoto" + ".jpg")
 
+            #loads and displays the listing position
+            position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
+                                     fg = "darkgrey", font = "fixedsys")
+            position.pack()
+            position.place(x = 290, y = 40)
+
+            link()
 
         except:
             #loads and displays a no results image
@@ -139,7 +169,7 @@ class search():  # brandchoices
             noresults.pack()
             noresults.place(x=52, y=75)
 
-            sadsmileyLd = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\sad.png"))
+            sadsmileyLd = ImageTk.PhotoImage(Image.open(r"programphotos\sad.png"))
             sadsmiley = Tkinter.Label(self.searchscreen_root, image=sadsmileyLd)
             sadsmiley.image = sadsmileyLd
             sadsmiley.pack()
@@ -149,13 +179,13 @@ class search():  # brandchoices
             try:
                 randomphotoname = str(random.randint(1, 1000000))
                 #downloads the image file from techbargain.com
-                urllib.urlretrieve("https:" + self.laptoplistings.values()[self.listingposition], randomphotoname + ".jpg")
+                urllib.urlretrieve("https:" + self.laptoplistings.values()[self.listingposition][0], randomphotoname + ".jpg")
                 #loads and displays the image
                 photoLd = ImageTk.PhotoImage(Image.open(randomphotoname + ".jpg"))
                 photo.config(image=photoLd)
                 photo.image = photoLd
                 photo.pack()
-                photo.place(x=140, y=65)
+                photo.place(x=100, y=65)
                 #Removes the photo from laptopfinder file.
                 os.remove(randomphotoname + ".jpg")
 
@@ -170,27 +200,37 @@ class search():  # brandchoices
                 self.listingposition = 0
 
             print self.listingposition
-
+            #changes photo forward
             getphoto()
-            #change listings forward
+            #change listings title forward
             result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]))
+            #change listing number label forward
+            position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
+            #change listing link forward
+            link()
 
         def lesslistings():
             self.listingposition -= 1
             # if scrolled to the start of the listings switch back to the last listing
             if self.listingposition < 0:
                 self.listingposition = len(self.laptoplistings.keys()) - 1
-
+            #changes photo backward
             getphoto()
+            #change listings title backward
             result_title.config(text=self.laptoplistings.keys()[self.listingposition])
+            # change listing number label backward
+            position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
+            # change listing link backward
+            link()
+
 
         #loads and displays the left and right arrows
-        moreresultsimgld = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\rightarrow.png"))
+        moreresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\rightarrow.png"))
         moreresultsarrow = Tkinter.Button(self.searchscreen_root, image=moreresultsimgld, bd=0, command=morelistings)
         moreresultsarrow.pack()
-        moreresultsarrow.place(x=660, y=130)
+        moreresultsarrow.place(x=560, y=130)
 
-        lessresultsimgld = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\leftarrow.png"))
+        lessresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\leftarrow.png"))
         lessresultsarrow = Tkinter.Button(self.searchscreen_root, image=lessresultsimgld, bd=0, command=lesslistings)
         lessresultsarrow.pack()
         lessresultsarrow.place(x=0, y=130)
@@ -212,6 +252,7 @@ class parameterscreen:
         #loads and displays the parameterscreen title
         paramlabel = Tkinter.Label(self.p_root, font="fixedsys", text=txt, bg="white")
         paramlabel.pack(fill = Tkinter.BOTH)
+
     #function for the parameter screen budget scale
     def range(self):
         self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2000, label="Budget", fg="darkgrey",
@@ -232,7 +273,7 @@ class parameterscreen:
             # tkinters command doesnt let me pass.
 
             if self.hpbrand.image == self.hpimg:
-                hpselected = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\hphover.jpg"))
+                hpselected = ImageTk.PhotoImage(Image.open(r"programphotos\hphover.jpg"))
                 self.hpbrand.config(image=hpselected)
                 self.hpbrand.image = hpselected
                 # adds keywords to brand choices
@@ -248,7 +289,7 @@ class parameterscreen:
             print self.brandchoices
 
         # read this before hpimgchg
-        self.hpimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\hp.jpg"))
+        self.hpimg = ImageTk.PhotoImage(Image.open(r"programphotos\hp.jpg"))
         self.hpbrand = Tkinter.Button(self.p_root, image=self.hpimg, bd=0, command=hpimgchg)
         self.hpbrand.image = self.hpimg
         self.hpbrand.pack()
@@ -257,7 +298,7 @@ class parameterscreen:
         # Same as above. Repeats 4 more times
         def dellimgchg():
             if self.dellbrand.image == self.dellimg:
-                dellselected = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\dellselected.png"))
+                dellselected = ImageTk.PhotoImage(Image.open(r"programphotos\dellselected.png"))
                 self.dellbrand.config(image=dellselected)
                 self.dellbrand.image = dellselected
 
@@ -270,7 +311,7 @@ class parameterscreen:
                 for hpremove in ["dell", "Dell", "DELL"]:
                     self.brandchoices.remove(hpremove)
 
-        self.dellimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\dell.png"))
+        self.dellimg = ImageTk.PhotoImage(Image.open(r"programphotos\dell.png"))
         self.dellbrand = Tkinter.Button(self.p_root, image=self.dellimg, bd=0, command=dellimgchg)
         self.dellbrand.image = self.dellimg
         self.dellbrand.pack()
@@ -279,7 +320,7 @@ class parameterscreen:
         def appleimgchg():
             if self.applebrand.image == self.appleimg:
                 appleselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\appleselected.png"))
+                    Image.open(r"programphotos\appleselected.png"))
                 self.applebrand.config(image=appleselected)
                 self.applebrand.image = appleselected
 
@@ -292,7 +333,7 @@ class parameterscreen:
                 for hpremove in ["apple", "Apple", "APPLE"]:
                     self.brandchoices.remove(hpremove)
 
-        self.appleimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\apple.png"))
+        self.appleimg = ImageTk.PhotoImage(Image.open(r"programphotos\apple.png"))
         self.applebrand = Tkinter.Button(self.p_root, image=self.appleimg, bd=0, command=appleimgchg)
         self.applebrand.image = self.appleimg
         self.applebrand.pack()
@@ -301,7 +342,7 @@ class parameterscreen:
         def microsoftimgchg():
             if self.microsoftbrand.image == self.microsoftimg:
                 microsoftselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\microsoftselected.png"))
+                    Image.open(r"programphotos\microsoftselected.png"))
                 self.microsoftbrand.config(image=microsoftselected)
                 self.microsoftbrand.image = microsoftselected
 
@@ -315,7 +356,7 @@ class parameterscreen:
                     self.brandchoices.remove(hpremove)
 
         self.microsoftimg = ImageTk.PhotoImage(
-            Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\microsoft.png"))
+            Image.open(r"programphotos\microsoft.png"))
         self.microsoftbrand = Tkinter.Button(self.p_root, image=self.microsoftimg, bd=0, command=microsoftimgchg)
         self.microsoftbrand.image = self.microsoftimg
         self.microsoftbrand.pack()
@@ -324,7 +365,7 @@ class parameterscreen:
         def lenovoimgchg():
             if self.lenovobrand.image == self.lenovoimg:
                 lenovoselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\lenovoselected.png"))
+                    Image.open(r"programphotos\lenovoselected.png"))
                 self.lenovobrand.config(image=lenovoselected)
                 self.lenovobrand.image = lenovoselected
 
@@ -337,7 +378,7 @@ class parameterscreen:
                 for hpremove in ["lenovo", "Lenovo", "LENOVO"]:
                     self.brandchoices.remove(hpremove)
 
-        self.lenovoimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\lenovo.png"))
+        self.lenovoimg = ImageTk.PhotoImage(Image.open(r"programphotos\lenovo.png"))
         self.lenovobrand = Tkinter.Button(self.p_root, image=self.lenovoimg, bd=0, command=lenovoimgchg)
         self.lenovobrand.image = self.lenovoimg
         self.lenovobrand.pack()
@@ -346,7 +387,7 @@ class parameterscreen:
         def acerimgchg():
             if self.acerbrand.image == self.acerimg:
                 acerselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\acerselected.jpg"))
+                    Image.open(r"programphotos\acerselected.jpg"))
                 self.acerbrand.config(image=acerselected)
                 self.acerbrand.image = acerselected
 
@@ -359,7 +400,7 @@ class parameterscreen:
                 for hpremove in ["acer", "Acer", "ACER"]:
                     self.brandchoices.remove(hpremove)
 
-        self.acerimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\acer.jpg"))
+        self.acerimg = ImageTk.PhotoImage(Image.open(r"programphotos\acer.jpg"))
         self.acerbrand = Tkinter.Button(self.p_root, image=self.acerimg, bd=0, command=acerimgchg)
         self.acerbrand.image = self.acerimg
         self.acerbrand.pack()
@@ -368,7 +409,7 @@ class parameterscreen:
         def razerimgchg():
             if self.razerbrand.image == self.razerimg:
                 razerselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\razerselected.jpg"))
+                    Image.open(r"programphotos\razerselected.jpg"))
                 self.razerbrand.config(image=razerselected)
                 self.razerbrand.image = razerselected
 
@@ -381,7 +422,7 @@ class parameterscreen:
                 for hpremove in ["razer", "Razer", "RAZER"]:
                     self.brandchoices.remove(hpremove)
 
-        self.razerimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\razer.png"))
+        self.razerimg = ImageTk.PhotoImage(Image.open(r"programphotos\razer.png"))
         self.razerbrand = Tkinter.Button(self.p_root, image=self.razerimg, bd=0, command=razerimgchg)
         self.razerbrand.image = self.razerimg
         self.razerbrand.pack()
@@ -390,7 +431,7 @@ class parameterscreen:
         def msiimgchg():
             if self.msibrand.image == self.msiimg:
                 self.msiselected = ImageTk.PhotoImage(
-                    Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\msiselected.jpg"))
+                    Image.open(r"programphotos\msiselected.jpg"))
                 self.msibrand.config(image=self.msiselected)
                 self.msibrand.image = self.msiselected
 
@@ -403,7 +444,7 @@ class parameterscreen:
                 for hpremove in ["msi", "Msi", "MSI"]:
                     self.brandchoices.remove(hpremove)
 
-        self.msiimg = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\msi.png"))
+        self.msiimg = ImageTk.PhotoImage(Image.open(r"programphotos\msi.png"))
         self.msibrand = Tkinter.Button(self.p_root, image=self.msiimg, bd=0, command=msiimgchg)
         self.msibrand.image = self.msiimg
         self.msibrand.pack()
@@ -447,12 +488,12 @@ class screen:
                                width=40, bg="white")
         startscreen_title.pack(side=Tkinter.TOP, fill=Tkinter.X)
         #loads and displats the desktop image
-        self.dtImageLd = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\desktop.png"))
+        self.dtImageLd = ImageTk.PhotoImage(Image.open(r"programphotos\desktop.png"))
         dtImage = Tkinter.Label(self.root, image=self.dtImageLd)
         dtImage.pack(side=Tkinter.LEFT)
         dtImage.place(x=45, y=45)
         #loads and displays the laptop image
-        self.ltImageLd = ImageTk.PhotoImage(Image.open(r"C:\Users\Cameron\PycharmProjects\laptopdealfinder\programphotos\laptop.png"))
+        self.ltImageLd = ImageTk.PhotoImage(Image.open(r"programphotos\laptop.png"))
         ltImage = Tkinter.Label(self.root, image=self.ltImageLd)
         ltImage.pack(side=Tkinter.RIGHT)
         ltImage.place(x=275, y=40)
