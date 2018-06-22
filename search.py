@@ -60,14 +60,20 @@ class search():  # brandchoices
     def microcenter(self):
         for m in self.microcenter_soup.find_all("a", class_ = "image"):
             self.titleposition += 1
-
-            mcstringtitles = m["data-brand"]
+            brandname = m["data-brand"]
+            mcstringtitles = m.text
             mcrawtitles = mcstringtitles.split()
+            print mcrawtitles
 
-            for mctitlekeywords in mcrawtitles:
-                if mctitlekeywords in self.computerbrandchoices:
+            for mctitlekeywords in brandname:
+                if brandname in self.computerbrandchoices:
                     #adds the title to the title list
-                    self.titles.append(m["data-name"])
+                    if len(mcrawtitles) > 25:
+                        cut = len(mcrawtitles) / 2
+                        mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
+                        mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
+                        self.titles.append(mctitle_firsthalf + '\n' + mctitle_secondhalf)
+
                     #adds the link to the link list
                     self.rawlinks.append("www.microcenter.com" + str(m["href"]))
                     #adds the listing price to the price list
@@ -97,7 +103,15 @@ class search():  # brandchoices
 
             for tdtitlekeywords in tdrawtitles:
                 if tdtitlekeywords in self.computerbrandchoices:
-                    self.titles.append(d.find("a")["title"])
+                    if len(tdrawtitles) > 25:
+                        cut = len(tdrawtitles) / 2
+                        tdtitle_firsthalf = str(" ".join(tdrawtitles[:cut]))
+                        tdtitle_secondhalf = str(" ".join(tdrawtitles[cut:]))
+                        self.titles.append(tdtitle_firsthalf + '\n' + tdtitle_secondhalf)
+
+                    else:
+                        self.titles.append(tdstringtitles)
+
                     #gets tigerdirect link minus the first two characters.
                     self.rawlinks.append("http://www.tigerdirect.com/applications" + str(d.find("a")["href"][2:]))
                     self.titleposition_compare.append(self.titleposition)
@@ -132,8 +146,6 @@ class search():  # brandchoices
                     else:
                         self.price.append(0)
 
-                    print len(self.titles), len(self.price)
-
                 except:
                     print "unicode error"
                     self.price.append(0)
@@ -142,10 +154,10 @@ class search():  # brandchoices
         # loop through the techbargain title and price lists and adds the title and photo to the dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
+            print len(self.titles), len(self.price)
             if self.price[c] <= self.computerbudget:
                 self.laptoplistings[self.titles[c]] = [self.imglist[c], self.rawlinks[c]]
 
-        print len(self.laptoplistings.keys())
 
     def searchscreen(self):
         self.tigerdirect()
@@ -154,25 +166,36 @@ class search():  # brandchoices
 
         def openlink():
             # link to listings
-                webbrowser.open_new(self.laptoplistings.values()[self.listingposition][1])
+            webbrowser.open_new(self.laptoplistings.values()[self.listingposition][1])
+
 
         linkbutton = Tkinter.Button(self.searchscreen_root,
                                     text=self.laptoplistings.values()[0][1],
                                     fg="darkgrey", bd=0, command=openlink)
         linkbutton.pack(side = Tkinter.BOTTOM)
 
+
         def link():
             linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][1]))
 
+        def fontsize():
+            titlelength = len(self.laptoplistings.keys()[self.listingposition].split())
 
-        #loads and displays the first image and title then deletes the image so its not saved on the hard drive
+            if titlelength < 10:
+                return 12
+            elif titlelength < 20:
+                return 10
+            else:
+                return 8
+
+
         result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
-                                        fg="darkgrey", font=("arial", 8), width=0)
+                                        fg="darkgrey", font=("arial", fontsize()), width=0)
         result_title.pack()
 
         urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][0], "firstphoto" + ".jpg")
 
-        # loads and displays the starting image
+        # loads and displays the first image and title then deletes the image so its not saved on the hard drive
         firstphotoLd = ImageTk.PhotoImage(Image.open("firstphoto" + ".jpg"))
         photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
         photo.image = firstphotoLd
@@ -187,10 +210,9 @@ class search():  # brandchoices
         position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
                                  fg = "darkgrey", font = "fixedsys")
         position.pack()
-        position.place(x = 290, y = 40)
+        position.place(x = 290, y = 260)
 
         link()
-
 
 
         def getphoto():
@@ -221,7 +243,7 @@ class search():  # brandchoices
             #changes photo forward
             getphoto()
             #change listings title forward
-            result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]))
+            result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]), font = ("arial", fontsize()))
             #change listing number label forward
             position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
             #change listing link forward
@@ -235,7 +257,7 @@ class search():  # brandchoices
             #changes photo backward
             getphoto()
             #change listings title backward
-            result_title.config(text=self.laptoplistings.keys()[self.listingposition])
+            result_title.config(text=self.laptoplistings.keys()[self.listingposition], font = ("arial", fontsize()))
             # change listing number label backward
             position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
             # change listing link backward
