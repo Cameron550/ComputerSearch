@@ -1,4 +1,4 @@
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 import Tkinter
 from bs4 import BeautifulSoup as bs
 import requests
@@ -196,13 +196,17 @@ class search():  # brandchoices
         urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][0], "firstphoto" + ".jpg")
 
         # loads and displays the first image and title then deletes the image so its not saved on the hard drive
-        firstphotoLd = ImageTk.PhotoImage(Image.open("firstphoto" + ".jpg"))
+        PILLfirstphotold = Image.open("firstphoto" + ".jpg")
+        #configures the size of the image
+        PILLfirstphotoconfig = ImageOps.fit(PILLfirstphotold, (210, 160), Image.ANTIALIAS)
+        firstphotoLd = ImageTk.PhotoImage(PILLfirstphotoconfig)
+
         photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
         photo.image = firstphotoLd
 
 
         photo.pack()
-        photo.place(x=100, y=65)
+        photo.place(x=100, y=75)
         # Removes the photo from laptopfinder file.
         os.remove("firstphoto" + ".jpg")
 
@@ -221,11 +225,15 @@ class search():  # brandchoices
                 #downloads the image file from techbargain.com
                 urllib.urlretrieve(str(self.laptoplistings.values()[self.listingposition][0]), randomphotoname + ".jpg")
                 #loads and displays the image
-                photoLd = ImageTk.PhotoImage(Image.open(randomphotoname + ".jpg"))
-                photo.config(image=photoLd)
-                photo.image = photoLd
+                PILphotold = Image.open(randomphotoname + ".jpg")
+                PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
+                tkinterphotoLd = ImageTk.PhotoImage(PILLphotold_config)
+                photo.config(image=tkinterphotoLd)
+
+
+                photo.image = tkinterphotoLd
                 photo.pack()
-                photo.place(x=100, y=65)
+                photo.place(x=100, y=75)
                 #Removes the photo from laptopfinder file.
                 os.remove(randomphotoname + ".jpg")
 
