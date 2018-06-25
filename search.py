@@ -166,7 +166,7 @@ class search():  # brandchoices
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
             if self.price[c] <= self.computerbudget:
-                self.laptoplistings[self.titles[c]] = [self.imglist[c], self.rawlinks[c]]
+                self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c]]
 
 
     def searchscreen(self):
@@ -176,17 +176,17 @@ class search():  # brandchoices
 
         def openlink():
             # link to listings
-            webbrowser.open_new(self.laptoplistings.values()[self.listingposition][1])
+            webbrowser.open_new(self.laptoplistings.values()[self.listingposition][2])
 
 
         linkbutton = Tkinter.Button(self.searchscreen_root,
-                                    text=self.laptoplistings.values()[0][1],
+                                    text=self.laptoplistings.values()[0][2],
                                     fg="darkgrey", bd=0, command=openlink)
         linkbutton.pack(side = Tkinter.BOTTOM)
 
 
         def link():
-            linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][1]))
+            linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][2]))
 
         def fontsize():
             titlelength = len(self.laptoplistings.keys()[self.listingposition].split())
@@ -202,7 +202,7 @@ class search():  # brandchoices
                                     fg="black", font=("arial", fontsize()))
         result_title.pack()
 
-        urllib.urlretrieve(self.laptoplistings.values()[0][0], "firstphoto" + ".jpg")
+        urllib.urlretrieve(self.laptoplistings.values()[0][1], "firstphoto" + ".jpg")
 
         # loads and displays the first image and title then deletes the image so its not saved on the hard drive
         PILLfirstphotold = Image.open("firstphoto" + ".jpg")
@@ -225,6 +225,14 @@ class search():  # brandchoices
         position.pack()
         position.place(x = 290, y = 260)
 
+        #loads and displays the price
+        pricelabel = Tkinter.Label(self.searchscreen_root, text = "Price: " + "$" +
+                                   str(self.laptoplistings.values()[self.listingposition][0]),
+                                   font = ("fixedsys", 15), fg = "darkgrey")
+
+        pricelabel.pack()
+        pricelabel.place(x = 370, y = 100)
+
         link()
 
 
@@ -232,7 +240,7 @@ class search():  # brandchoices
             try:
                 randomphotoname = str(random.randint(1, 1000000))
                 #downloads the image file from techbargain.com
-                urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][0], randomphotoname + ".jpg")
+                urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][1], randomphotoname + ".jpg")
                 #loads and displays the image
                 PILphotold = Image.open(randomphotoname + ".jpg")
                 PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
@@ -265,6 +273,9 @@ class search():  # brandchoices
             position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
             #change listing link forward
             link()
+            #change price label forward
+            pricelabel.config(text="Price: " + "$" +
+                                   str(self.laptoplistings.values()[self.listingposition][0]))
 
         def lesslistings():
             self.listingposition -= 1
@@ -279,6 +290,9 @@ class search():  # brandchoices
             position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
             # change listing link backward
             link()
+            #change price label backward
+            pricelabel.config(text="Price: " + "$" +
+                                   str(self.laptoplistings.values()[self.listingposition][0]))
 
 
         #loads and displays the left and right arrows
@@ -376,8 +390,7 @@ class parameterscreen:
 
         def appleimgchg():
             if self.applebrand.image == self.appleimg:
-                appleselected = ImageTk.PhotoImage(
-                    Image.open(r"programphotos\appleselected.png"))
+                appleselected = ImageTk.PhotoImage(Image.open(r"programphotos\appleselected.png"))
                 self.applebrand.config(image=appleselected)
                 self.applebrand.image = appleselected
 
