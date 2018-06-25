@@ -24,15 +24,18 @@ class search():  # brandchoices
         self.searchtitle.pack(fill=Tkinter.X)
 
         if Interface1.laptopordesktop == "laptop":
-            self.url = "https://www.techbargains.com/category/359/computers/laptops"
+
+            geturl_newegg = requests.get("https://www.newegg.com/Product/ProductList.aspx?Submit=StoreIM&Depa=3&Category=223").text
             geturl_microcenter = requests.get("http://www.microcenter.com/category/4294967288/Laptops-Notebooks").text
             geturl_tigerdirect = requests.get("http://www.tigerdirect.com/applications/category/category_tlc.asp?CatId=17").text
 
         elif Interface1.laptopordesktop == "desktop":
-            self.url = "https://www.techbargains.com/category/357/computers/desktops"
+
+            geturl_newegg = requests.get("https://www.newegg.com/Product/ProductList.aspx?Submit=StoreIM&Depa=3&Category=228").text
             geturl_microcenter = requests.get("http://www.microcenter.com/category/4294967292/All-Desktops").text
             geturl_tigerdirect = requests.get("http://www.tigerdirect.com/applications/category/category_tlc.asp?CatId=6").text
 
+        self.newegg_soup = bs(geturl_newegg, "html.parser")
         self.microcenter_soup = bs(geturl_microcenter, "html.parser")
         self.tigerdirect_soup = bs(geturl_tigerdirect, "lxml")
 
@@ -51,51 +54,54 @@ class search():  # brandchoices
         self.links = []
 
         self.imglist = []
+        self.imgposition = 0
 
         # variable for the compare object
         self.laptoplistings = {}
         #variables for the searchscreen object
         self.listingposition = 0
 
-    def microcenter(self):
-        for m in self.microcenter_soup.find_all("a", class_ = "image"):
-            self.titleposition += 1
-            brandname = m["data-brand"]
-            mcstringtitles = m.text
-            mcrawtitles = mcstringtitles.split()
-            print mcrawtitles
 
-            for mctitlekeywords in brandname:
-                if brandname in self.computerbrandchoices:
-                    #adds the title to the title list
+    def microcenter(self):
+        for m in self.microcenter_soup.find_all("a", class_="image"):
+            brandname = m["data-brand"]
+            mcstringtitles = m["data-name"]
+            mcrawtitles = mcstringtitles.split()
+
+            if brandname in self.computerbrandchoices:
+                    # adds the title to the title list
                     if len(mcrawtitles) > 25:
                         cut = len(mcrawtitles) / 2
                         mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
                         mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
-                        self.titles.append(mctitle_firsthalf + '\n' + mctitle_secondhalf)
 
-                    #adds the link to the link list
+                        self.titles.append(mctitle_secondhalf + "\n" + mctitle_secondhalf)
+                    else:
+                        self.titles.append(str(mcstringtitles))
+
+                    # adds the link to the link list
                     self.rawlinks.append("www.microcenter.com" + str(m["href"]))
-                    #adds the listing price to the price list
+
+                    # adds the listing price to the price list
                     mcrawprice = str(m["data-price"])
+                    mcprice = mcrawprice
 
                     if len(mcrawprice) == 5:
-                        self.price.append(len(mcrawprice[0:2]))
+                        self.price.append(int(mcprice[0:2]))
 
                     elif len(mcrawprice) == 6:
-                        self.price.append(len(mcrawprice[0:3]))
+                        self.price.append(int(mcprice[0:3]))
 
                     elif len(mcrawprice) == 7:
-                        self.price.append(len(mcrawprice[0:4]))
+                        self.price.append(int(mcprice[0:4]))
 
                     # adds the photo to the photo list
-                    mcphoto = m.find("img", class_ = "SearchResultProductImage")["src"]
+                    mcphoto = m.find("img", class_="SearchResultProductImage")["src"]
                     self.imglist.append(mcphoto)
 
-
     def tigerdirect(self):
-        #gets tigerdirect titles and links
-        for d in self.tigerdirect_soup.find_all("div", class_ = "productImage"):
+        # gets tigerdirect titles and links
+        for d in self.tigerdirect_soup.find_all("div", class_="productImage"):
             self.titleposition += 1
 
             tdstringtitles = d.find("a")["title"]
@@ -104,22 +110,27 @@ class search():  # brandchoices
             for tdtitlekeywords in tdrawtitles:
                 if tdtitlekeywords in self.computerbrandchoices:
                     if len(tdrawtitles) > 25:
-                        cut = len(tdrawtitles) / 2
-                        tdtitle_firsthalf = str(" ".join(tdrawtitles[:cut]))
-                        tdtitle_secondhalf = str(" ".join(tdrawtitles[cut:]))
-                        self.titles.append(tdtitle_firsthalf + '\n' + tdtitle_secondhalf)
+                        try:
+                            cut = len(tdrawtitles) / 2
+                            tdtitle_firsthalf = str(" ".join(tdrawtitles[:cut]))
+                            tdtitle_secondhalf = str(" ".join(tdrawtitles[cut:]))
+                            self.titles.append(tdtitle_firsthalf + '\n' + tdtitle_secondhalf)
+                        # unicode error, happens every 1/300
+                        except:
+                            print "unicode error"
+                            self.titles.append(tdstringtitles)
 
                     else:
                         self.titles.append(tdstringtitles)
 
-                    #gets tigerdirect link minus the first two characters.
+                    # gets tigerdirect link minus the first two characters.
                     self.rawlinks.append("http://www.tigerdirect.com/applications" + str(d.find("a")["href"][2:]))
                     self.titleposition_compare.append(self.titleposition)
-                    #gets tigerdirect images
+                    # gets tigerdirect images
                     self.imglist.append(str(d.find("img")["data-yo-src"]))
 
-        #gets price
-        for f in self.tigerdirect_soup.find_all("div", class_ = "salePrice"):
+        # gets price
+        for f in self.tigerdirect_soup.find_all("div", class_="salePrice"):
             self.priceposition += 1
             if self.priceposition in self.titleposition_compare:
                 try:
@@ -143,7 +154,7 @@ class search():  # brandchoices
                     elif len(tdrawprice) == 19:
                         self.price.append(int(f.text[12:15]))
 
-                    else:
+                    else:  # adds 0 which would filter it out to not be a listing later in the program
                         self.price.append(0)
 
                 except:
@@ -154,7 +165,6 @@ class search():  # brandchoices
         # loop through the techbargain title and price lists and adds the title and photo to the dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
-            print len(self.titles), len(self.price)
             if self.price[c] <= self.computerbudget:
                 self.laptoplistings[self.titles[c]] = [self.imglist[c], self.rawlinks[c]]
 
@@ -188,12 +198,11 @@ class search():  # brandchoices
             else:
                 return 8
 
-
         result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
-                                        fg="darkgrey", font=("arial", fontsize()), width=0)
+                                    fg="black", font=("arial", fontsize()))
         result_title.pack()
 
-        urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][0], "firstphoto" + ".jpg")
+        urllib.urlretrieve(self.laptoplistings.values()[0][0], "firstphoto" + ".jpg")
 
         # loads and displays the first image and title then deletes the image so its not saved on the hard drive
         PILLfirstphotold = Image.open("firstphoto" + ".jpg")
@@ -223,7 +232,7 @@ class search():  # brandchoices
             try:
                 randomphotoname = str(random.randint(1, 1000000))
                 #downloads the image file from techbargain.com
-                urllib.urlretrieve(str(self.laptoplistings.values()[self.listingposition][0]), randomphotoname + ".jpg")
+                urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][0], randomphotoname + ".jpg")
                 #loads and displays the image
                 PILphotold = Image.open(randomphotoname + ".jpg")
                 PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
@@ -304,8 +313,8 @@ class parameterscreen:
     #function for the parameter screen budget scale
     def range(self):
         self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2000, label="Budget", fg="darkgrey",
-                                        orient=Tkinter.VERTICAL, length=250,
-                                        sliderlength=18, bd=1, font="fixedsys",
+                                        orient=Tkinter.VERTICAL, length=250,                   #used root background
+                                        sliderlength=14, bd=1, font="fixedsys", troughcolor = self.p_root.cget("bg"),
                                         )
 
         self.pricerange.pack()
