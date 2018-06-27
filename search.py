@@ -97,14 +97,22 @@ class search():  # brandchoices
                         mcrawprice = str(m["data-price"])
                         mcprice = mcrawprice
 
-                        if len(mcrawprice) == 5:
-                            self.price.append(int(mcprice[0:2]))
+                        try:
+                            if len(mcrawprice) == 5:
+                                self.price.append(int(mcprice[0:2]))
 
-                        elif len(mcrawprice) == 6:
-                            self.price.append(int(mcprice[0:3]))
+                            elif len(mcrawprice) == 6:
+                                self.price.append(int(mcprice[0:3]))
 
-                        elif len(mcrawprice) == 7:
-                            self.price.append(int(mcprice[0:4]))
+                            elif len(mcrawprice) == 7:
+                                self.price.append(int(mcprice[0:4]))
+
+                            else:               # 1 dollar above max budget
+                                                # to phase out listing
+                                self.price.append(2001)
+                        except:
+                            print "unicode error in microcenter price"
+                            self.price.append(2001)
 
             except:
                 print "error"
@@ -170,14 +178,12 @@ class search():  # brandchoices
 
                     elif len(tdrawprice) == 19:
                         self.price.append(int(f.text[12:15]))
-
-                    else:  # adds 0 which would filter it out to not be a listing later in the program
-                        self.price.append(0)
-
+                    else:
+                        self.price.append(2001)
                 except:
-                    print "unicode error"
-                    self.price.append(0)
-
+                    self.price.append(2001)
+                    #unicode error
+        print len(self.price), len(self.titles)
     def compare(self):
         # loop through the techbargain title and price lists and adds the title and photo to the dictionary
         # if the price is less or equal to the set budget
@@ -187,8 +193,8 @@ class search():  # brandchoices
 
 
     def searchscreen(self):
-        self.microcenter()
         self.tigerdirect()
+        self.microcenter()
         self.compare()
 
         def openlink():
@@ -391,6 +397,7 @@ class parameterscreen:
                 self.dellbrand.image = dellselected
 
                 self.brandchoices.extend(("dell", "Dell", "DELL"))
+
 
             elif self.dellbrand.image != self.dellimg:
                 self.dellbrand.config(image=self.dellimg)
