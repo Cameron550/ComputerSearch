@@ -63,41 +63,58 @@ class search():  # brandchoices
 
 
     def microcenter(self):
-        for m in self.microcenter_soup.find_all("a", class_="image"):
-            brandname = m["data-brand"]
-            mcstringtitles = m["data-name"]
-            mcrawtitles = mcstringtitles.split()
+        for m in self.microcenter_soup.find_all("a"):
+            #Try statement because some "a" tags dont have an id.
+            try:
+                #Asks if len is equal too the correct id to get data from.
+                if len(m["id"]) == 15 or len(m["id"]) == 14:
+                    self.titleposition += 1
 
-            if brandname in self.computerbrandchoices:
-                    # adds the title to the title list
-                    if len(mcrawtitles) > 25:
-                        cut = len(mcrawtitles) / 2
-                        mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
-                        mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
+                    brandname = m["data-brand"]
+                    mcstringtitles = str(m.text)
 
-                        self.titles.append(mctitle_secondhalf + "\n" + mctitle_secondhalf)
-                    else:
-                        self.titles.append(str(mcstringtitles))
+                    mcrawtitles = mcstringtitles.split()
 
-                    # adds the link to the link list
-                    self.rawlinks.append("www.microcenter.com" + str(m["href"]))
+                    if brandname in self.computerbrandchoices:
+                        # adds the title to the title list
+                        if len(mcrawtitles) > 15:
+                            cut = len(mcrawtitles) / 2
+                            mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
+                            mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
 
-                    # adds the listing price to the price list
-                    mcrawprice = str(m["data-price"])
-                    mcprice = mcrawprice
+                            self.titleposition_compare.append(self.titleposition)
 
-                    if len(mcrawprice) == 5:
-                        self.price.append(int(mcprice[0:2]))
+                            self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
 
-                    elif len(mcrawprice) == 6:
-                        self.price.append(int(mcprice[0:3]))
+                        else:
+                            self.titleposition_compare.append(self.titleposition)
+                            self.titles.append(str(mcstringtitles))
 
-                    elif len(mcrawprice) == 7:
-                        self.price.append(int(mcprice[0:4]))
+                        # adds the link to the link list
+                        self.rawlinks.append("www.microcenter.com" + str(m["href"]))
 
-                    # adds the photo to the photo list
-                    mcphoto = m.find("img", class_="SearchResultProductImage")["src"]
-                    self.imglist.append(mcphoto)
+                        # adds the listing price to the price list
+                        mcrawprice = str(m["data-price"])
+                        mcprice = mcrawprice
+
+                        if len(mcrawprice) == 5:
+                            self.price.append(int(mcprice[0:2]))
+
+                        elif len(mcrawprice) == 6:
+                            self.price.append(int(mcprice[0:3]))
+
+                        elif len(mcrawprice) == 7:
+                            self.price.append(int(mcprice[0:4]))
+
+            except:
+                print "error"
+
+
+        for L in self.microcenter_soup("img", class_ = "SearchResultProductImage"):
+            self.imgposition += 1
+
+            if self.imgposition in self.titleposition_compare:
+                self.imglist.append(L["src"])
 
     def tigerdirect(self):
         # gets tigerdirect titles and links
@@ -170,8 +187,8 @@ class search():  # brandchoices
 
 
     def searchscreen(self):
-        self.tigerdirect()
         self.microcenter()
+        self.tigerdirect()
         self.compare()
 
         def openlink():
