@@ -67,8 +67,7 @@ class search():  # brandchoices
             #Try statement because some "a" tags dont have an id.
             try:
                 #Asks if len is equal too the correct id to get data from.
-                if len(m["id"]) == 15 or len(m["id"]) == 14:
-                    self.titleposition += 1
+                if len(m["id"]) == 15 or len(m["id"]) == 14 and m["id"][4] == "P":
 
                     brandname = m["data-brand"]
                     mcstringtitles = str(m.text)
@@ -82,12 +81,9 @@ class search():  # brandchoices
                             mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
                             mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
 
-                            self.titleposition_compare.append(self.titleposition)
-
                             self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
 
                         else:
-                            self.titleposition_compare.append(self.titleposition)
                             self.titles.append(str(mcstringtitles))
 
                         # adds the link to the link list
@@ -114,15 +110,23 @@ class search():  # brandchoices
                             print "unicode error in microcenter price"
                             self.price.append(2001)
 
+                        #gets the image
+                        mcimageurl = requests.get("http://www.microcenter.com" + str(m["href"])).text
+                        mcimagesoup = bs(mcimageurl, "lxml")
+
+                        try:
+
+                            for n in mcimagesoup.find("div", class_ = "image-slide"):
+                                print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
+                                self.imglist.append(n.find("img", class_ = "productImageZoom")["src"])
+
+                        except:
+                            #adds image unavailable image when unicode error or listing has no image.
+                            self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
+
             except:
-                print "error"
+                print "A tag has no ID"
 
-
-        for L in self.microcenter_soup("img", class_ = "SearchResultProductImage"):
-            self.imgposition += 1
-
-            if self.imgposition in self.titleposition_compare:
-                self.imglist.append(L["src"])
 
     def tigerdirect(self):
         # gets tigerdirect titles and links
@@ -183,153 +187,166 @@ class search():  # brandchoices
                 except:
                     self.price.append(2001)
                     #unicode error
-        print len(self.price), len(self.titles)
+
     def compare(self):
         # loop through the techbargain title and price lists and adds the title and photo to the dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
             if self.price[c] <= self.computerbudget:
+
                 self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c]]
 
 
     def searchscreen(self):
-        self.tigerdirect()
         self.microcenter()
+        self.tigerdirect()
         self.compare()
 
-        def openlink():
-            # link to listings
-            webbrowser.open_new(self.laptoplistings.values()[self.listingposition][2])
+        if len(self.laptoplistings) == 0:
+            Noresultstext = Tkinter.Label(self.searchscreen_root,text = "Sorry, there are no results available.",
+                                          fg = "darkgrey",font = "fixedsys" )
+            Noresultstext.pack()
+            Noresultstext.place(x = 140, y = 170)
+
+            Noresultsphotold = ImageTk.PhotoImage(Image.open(r"programphotos\sad.jpg"))
+            Noresultsphoto = Tkinter.Label(self.searchscreen_root, image = Noresultsphotold)
+            Noresultsphoto.Image = Noresultsphotold
+            Noresultsphoto.pack()
+            Noresultsphoto.place(x = 260, y = 90)
+
+        else:
+            def openlink():
+                # link to listings
+                webbrowser.open_new(self.laptoplistings.values()[self.listingposition][2])
 
 
-        linkbutton = Tkinter.Button(self.searchscreen_root,
+            linkbutton = Tkinter.Button(self.searchscreen_root,
                                     text=self.laptoplistings.values()[0][2],
                                     fg="darkgrey", bd=0, command=openlink)
-        linkbutton.pack(side = Tkinter.BOTTOM)
+            linkbutton.pack(side = Tkinter.BOTTOM)
 
 
-        def link():
-            linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][2]))
+            def fontsize():
+                titlelength = len(self.laptoplistings.keys()[self.listingposition].split())
 
-        def fontsize():
-            titlelength = len(self.laptoplistings.keys()[self.listingposition].split())
+                if titlelength < 10:
+                    return 12
+                elif titlelength < 20:
+                    return 10
+                else:
+                    return 8
 
-            if titlelength < 10:
-                return 12
-            elif titlelength < 20:
-                return 10
-            else:
-                return 8
-
-        result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
+            result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
                                     fg="black", font=("arial", fontsize()))
-        result_title.pack()
+            result_title.pack()
 
-        urllib.urlretrieve(self.laptoplistings.values()[0][1], "firstphoto" + ".jpg")
+            urllib.urlretrieve(self.laptoplistings.values()[0][1], "firstphoto" + ".jpg")
 
-        # loads and displays the first image and title then deletes the image so its not saved on the hard drive
-        PILLfirstphotold = Image.open("firstphoto" + ".jpg")
-        #configures the size of the image
-        PILLfirstphotoconfig = ImageOps.fit(PILLfirstphotold, (210, 160), Image.ANTIALIAS)
-        firstphotoLd = ImageTk.PhotoImage(PILLfirstphotoconfig)
+            # loads and displays the first image and title then deletes the image so its not saved on the hard drive
+            PILLfirstphotold = Image.open("firstphoto" + ".jpg")
+            #configures the size of the image
+            PILLfirstphotoconfig = ImageOps.fit(PILLfirstphotold, (210, 160), Image.ANTIALIAS)
+            firstphotoLd = ImageTk.PhotoImage(PILLfirstphotoconfig)
 
-        photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
-        photo.image = firstphotoLd
+            photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
+            photo.image = firstphotoLd
 
 
-        photo.pack()
-        photo.place(x=100, y=75)
-        # Removes the photo from laptopfinder file.
-        os.remove("firstphoto" + ".jpg")
+            photo.pack()
+            photo.place(x=100, y=75)
+            # Removes the photo from laptopfinder file.
+            os.remove("firstphoto" + ".jpg")
 
-        #loads and displays the listing position
-        position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
+            #loads and displays the listing position
+            position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
                                  fg = "darkgrey", font = "fixedsys")
-        position.pack()
-        position.place(x = 290, y = 260)
+            position.pack()
+            position.place(x = 290, y = 260)
 
-        #loads and displays the price
-        pricelabel = Tkinter.Label(self.searchscreen_root, text = "Price: " + "$" +
-                                   str(self.laptoplistings.values()[self.listingposition][0]),
-                                   font = ("fixedsys", 15), fg = "darkgrey")
+            #loads and displays the price
+            pricelabel = Tkinter.Label(self.searchscreen_root, text = "Price: " + "$" +
+                                        str(self.laptoplistings.values()[0][0]),
+                                        font = ("fixedsys", 15), fg = "darkgrey")
 
-        pricelabel.pack()
-        pricelabel.place(x = 370, y = 100)
-
-        link()
+            pricelabel.pack()
+            pricelabel.place(x = 370, y = 100)
 
 
-        def getphoto():
-            try:
-                randomphotoname = str(random.randint(1, 1000000))
-                #downloads the image file from techbargain.com
-                urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][1], randomphotoname + ".jpg")
-                #loads and displays the image
-                PILphotold = Image.open(randomphotoname + ".jpg")
-                PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
-                tkinterphotoLd = ImageTk.PhotoImage(PILLphotold_config)
-                photo.config(image=tkinterphotoLd)
+            def getphoto():
+                try:
+                    randomphotoname = str(random.randint(1, 1000000))
+                    #downloads the image file from techbargain.com
+                    urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][1], randomphotoname + ".jpg")
+                    #loads and displays the image
+                    PILphotold = Image.open(randomphotoname + ".jpg")
+                    PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
+                    tkinterphotoLd = ImageTk.PhotoImage(PILLphotold_config)
+                    photo.config(image=tkinterphotoLd)
 
 
-                photo.image = tkinterphotoLd
-                photo.pack()
-                photo.place(x=100, y=75)
-                #Removes the photo from laptopfinder file.
-                os.remove(randomphotoname + ".jpg")
+                    photo.image = tkinterphotoLd
+                    photo.pack()
+                    photo.place(x=100, y=75)
+                    #Removes the photo from laptopfinder file.
+                    os.remove(randomphotoname + ".jpg")
 
-            except:
-                print "download error"
+                except:
+                    print "download error"
 
+            def link():
+                linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][2]))
 
-        def morelistings():
-            self.listingposition += 1
-            #if scrolled to the end of the listings switch back to the first listing
-            if self.listingposition > len(self.laptoplistings.keys()) - 1:
-                self.listingposition = 0
-
-            print self.listingposition
-            #changes photo forward
-            getphoto()
-            #change listings title forward
-            result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]), font = ("arial", fontsize()))
-            #change listing number label forward
-            position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
-            #change listing link forward
             link()
-            #change price label forward
-            pricelabel.config(text="Price: " + "$" +
+
+            def morelistings():
+                self.listingposition += 1
+                #if scrolled to the end of the listings switch back to the first listing
+                if self.listingposition > len(self.laptoplistings.keys()) - 1:
+                    self.listingposition = 0
+
+                print self.listingposition
+                #changes photo forward
+                getphoto()
+                #change listings title forward
+                result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]), font = ("arial", fontsize()))
+                #change listing number label forward
+                position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
+                #change listing link forward
+                link()
+                #change price label forward
+                pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
 
-        def lesslistings():
-            self.listingposition -= 1
-            # if scrolled to the start of the listings switch back to the last listing
-            if self.listingposition < 0:
-                self.listingposition = len(self.laptoplistings.keys()) - 1
-            #changes photo backward
-            getphoto()
-            #change listings title backward
-            result_title.config(text=self.laptoplistings.keys()[self.listingposition], font = ("arial", fontsize()))
-            # change listing number label backward
-            position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
-            # change listing link backward
-            link()
-            #change price label backward
-            pricelabel.config(text="Price: " + "$" +
+            def lesslistings():
+                self.listingposition -= 1
+                # if scrolled to the start of the listings switch back to the last listing
+                if self.listingposition < 0:
+                    self.listingposition = len(self.laptoplistings.keys()) - 1
+                #changes photo backward
+                getphoto()
+                #change listings title backward
+                result_title.config(text=self.laptoplistings.keys()[self.listingposition], font = ("arial", fontsize()))
+                # change listing number label backward
+                position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
+                # change listing link backward
+                link()
+                #change price label backward
+                pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
 
 
-        #loads and displays the left and right arrows
-        moreresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\rightarrow.png"))
-        moreresultsarrow = Tkinter.Button(self.searchscreen_root, image=moreresultsimgld, bd=0, command=morelistings)
-        moreresultsarrow.pack()
-        moreresultsarrow.place(x=560, y=130)
+            #loads and displays the left and right arrows
+            moreresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\rightarrow.png"))
+            moreresultsarrow = Tkinter.Button(self.searchscreen_root, image=moreresultsimgld, bd=0, command=morelistings)
+            moreresultsarrow.pack()
+            moreresultsarrow.place(x=560, y=130)
 
-        lessresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\leftarrow.png"))
-        lessresultsarrow = Tkinter.Button(self.searchscreen_root, image=lessresultsimgld, bd=0, command=lesslistings)
-        lessresultsarrow.pack()
-        lessresultsarrow.place(x=0, y=130)
+            lessresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\leftarrow.png"))
+            lessresultsarrow = Tkinter.Button(self.searchscreen_root, image=lessresultsimgld, bd=0, command=lesslistings)
+            lessresultsarrow.pack()
+            lessresultsarrow.place(x=0, y=130)
 
-        self.searchscreen_root.mainloop()
+            self.searchscreen_root.mainloop()
 
 
 class parameterscreen:
@@ -623,4 +640,3 @@ class screen:
 # starts the startup screen
 Interface1 = screen()
 Interface1.startscreen()
-Interface1.root.mainloop()
