@@ -58,78 +58,76 @@ class search():  # brandchoices
 
         # variable for the compare object
         self.laptoplistings = {}
-        #variables for the searchscreen object
+        # variables for the searchscreen object
         self.listingposition = 0
 
-
+    # Any efforts to increase the speed of the microcenter search process are appreciated
     def microcenter(self):
-        for m in self.microcenter_soup.find_all("a"):
-            #Try statement because some "a" tags dont have an id.
+        for m in self.microcenter_soup.find_all("div", class_ = "normal"):
             try:
-                #Asks if len is equal too the correct id to get data from.
-                if len(m["id"]) == 15 or len(m["id"]) == 14 and m["id"][4] == "P":
+                mcstringtitles = str(m.find("a").text)
+                print mcstringtitles
+                brandname = m.find("a")["data-brand"]
 
-                    brandname = m["data-brand"]
-                    mcstringtitles = str(m.text)
 
-                    mcrawtitles = mcstringtitles.split()
+                mcrawtitles = mcstringtitles.split()
 
-                    if brandname in self.computerbrandchoices:
-                        # adds the title to the title list
-                        if len(mcrawtitles) > 15:
-                            cut = len(mcrawtitles) / 2
-                            mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
-                            mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
+                if brandname in self.computerbrandchoices:
+                    # adds the title to the title list
+                    if len(mcrawtitles) > 15:
+                        cut = len(mcrawtitles) / 2
+                        mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
+                        mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
 
-                            self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
+                        self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
 
-                        else:
-                            self.titles.append(str(mcstringtitles))
+                    else:
+                        self.titles.append(mcstringtitles)
 
-                        # adds the link to the link list
-                        self.rawlinks.append("www.microcenter.com" + str(m["href"]))
+                    # adds the link to the link list
+                    self.rawlinks.append("www.microcenter.com" + str(m.find("a")["href"]))
 
-                        # adds the listing price to the price list
-                        mcrawprice = str(m["data-price"])
-                        mcprice = mcrawprice
+                    # adds the listing price to the price list
+                    mcrawprice = str(m.find("a")["data-price"])
+                    mcprice = mcrawprice
 
-                        try:
-                            if len(mcrawprice) == 5:
-                                self.price.append(int(mcprice[0:2]))
+                    try:
+                        if len(mcrawprice) == 5:
+                            self.price.append(int(mcprice[0:2]))
 
-                            elif len(mcrawprice) == 6:
-                                self.price.append(int(mcprice[0:3]))
+                        elif len(mcrawprice) == 6:
+                            self.price.append(int(mcprice[0:3]))
 
-                            elif len(mcrawprice) == 7:
-                                self.price.append(int(mcprice[0:4]))
+                        elif len(mcrawprice) == 7:
+                            self.price.append(int(mcprice[0:4]))
 
-                            else:               # 1 dollar above max budget
+                        else:               # 1 dollar above max budget
                                                 # to phase out listing
-                                self.price.append(2001)
-                        except:
-                            print "unicode error in microcenter price"
                             self.price.append(2001)
+                    except:
+                        print "unicode error in microcenter price"
+                        self.price.append(2001)
 
-                        #gets the image
-                        mcimageurl = requests.get("http://www.microcenter.com" + str(m["href"])).text
-                        mcimagesoup = bs(mcimageurl, "lxml")
+                    # Gets the image
+                    print str(m.find("a")["href"])
+                    mcimageurl = requests.get("http://www.microcenter.com" + str(m.find("a")["href"])).text
+                    mcimagesoup = bs(mcimageurl, "html.parser")
 
-                        try:
+                    try:
 
-                            for n in mcimagesoup.find("div", class_ = "image-slide"):
-                                print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
-                                self.imglist.append(n.find("img", class_ = "productImageZoom")["src"])
+                        for n in mcimagesoup.find("div", class_ = "image-slide"):
+                            self.imglist.append(n.find("img", class_ = "productImageZoom")["src"])
 
-                        except:
-                            #adds image unavailable image when unicode error or listing has no image.
-                            self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
+                    except:
+                        # Adds image unavailable image when unicode error or listing has no image.
+                        self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
 
             except:
-                print "A tag has no ID"
+                print "tag error, update microcenter function"
 
 
     def tigerdirect(self):
-        # gets tigerdirect titles and links
+        # Gets tigerdirect titles and links
         for d in self.tigerdirect_soup.find_all("div", class_="productImage"):
             self.titleposition += 1
 
@@ -144,7 +142,7 @@ class search():  # brandchoices
                             tdtitle_firsthalf = str(" ".join(tdrawtitles[:cut]))
                             tdtitle_secondhalf = str(" ".join(tdrawtitles[cut:]))
                             self.titles.append(tdtitle_firsthalf + '\n' + tdtitle_secondhalf)
-                        # unicode error, happens every 1/300
+                        # Unicode error, happens every 1/300
                         except:
                             print "unicode error"
                             self.titles.append(tdstringtitles)
@@ -158,7 +156,7 @@ class search():  # brandchoices
                     # gets tigerdirect images
                     self.imglist.append(str(d.find("img")["data-yo-src"]))
 
-        # gets price
+        # Gets price
         for f in self.tigerdirect_soup.find_all("div", class_="salePrice"):
             self.priceposition += 1
             if self.priceposition in self.titleposition_compare:
@@ -189,11 +187,10 @@ class search():  # brandchoices
                     #unicode error
 
     def compare(self):
-        # loop through the techbargain title and price lists and adds the title and photo to the dictionary
+        # Loop through the techbargain title and price lists and adds the collected values to the dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
             if self.price[c] <= self.computerbudget:
-
                 self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c]]
 
 
@@ -242,9 +239,9 @@ class search():  # brandchoices
 
             urllib.urlretrieve(self.laptoplistings.values()[0][1], "firstphoto" + ".jpg")
 
-            # loads and displays the first image and title then deletes the image so its not saved on the hard drive
+            # Loads and displays the first image and title then deletes the image so its not saved on the hard drive
             PILLfirstphotold = Image.open("firstphoto" + ".jpg")
-            #configures the size of the image
+            # Configures the size of the image
             PILLfirstphotoconfig = ImageOps.fit(PILLfirstphotold, (210, 160), Image.ANTIALIAS)
             firstphotoLd = ImageTk.PhotoImage(PILLfirstphotoconfig)
 
@@ -257,13 +254,13 @@ class search():  # brandchoices
             # Removes the photo from laptopfinder file.
             os.remove("firstphoto" + ".jpg")
 
-            #loads and displays the listing position
+            # Loads and displays the listing position
             position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
                                  fg = "darkgrey", font = "fixedsys")
             position.pack()
             position.place(x = 290, y = 260)
 
-            #loads and displays the price
+            # Loads and displays the price
             pricelabel = Tkinter.Label(self.searchscreen_root, text = "Price: " + "$" +
                                         str(self.laptoplistings.values()[0][0]),
                                         font = ("fixedsys", 15), fg = "darkgrey")
@@ -275,19 +272,20 @@ class search():  # brandchoices
             def getphoto():
                 try:
                     randomphotoname = str(random.randint(1, 1000000))
-                    #downloads the image file from techbargain.com
-                    urllib.urlretrieve(self.laptoplistings.values()[self.listingposition][1], randomphotoname + ".jpg")
-                    #loads and displays the image
+                    # Downloads the image file from techbargain.com
+                    photolink = self.laptoplistings.values()[self.listingposition][1]
+                    urllib.urlretrieve(photolink, randomphotoname + ".jpg")
+                    # Loads and displays the image
                     PILphotold = Image.open(randomphotoname + ".jpg")
+                                         # Changes img size to a default
                     PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
                     tkinterphotoLd = ImageTk.PhotoImage(PILLphotold_config)
+
                     photo.config(image=tkinterphotoLd)
-
-
                     photo.image = tkinterphotoLd
                     photo.pack()
                     photo.place(x=100, y=75)
-                    #Removes the photo from laptopfinder file.
+                    # Removes the photo from laptopfinder file.
                     os.remove(randomphotoname + ".jpg")
 
                 except:
@@ -300,42 +298,42 @@ class search():  # brandchoices
 
             def morelistings():
                 self.listingposition += 1
-                #if scrolled to the end of the listings switch back to the first listing
+                # If scrolled to the end of the listings switch back to the first listing
                 if self.listingposition > len(self.laptoplistings.keys()) - 1:
                     self.listingposition = 0
 
                 print self.listingposition
-                #changes photo forward
+                # Changes photo forward
                 getphoto()
-                #change listings title forward
-                result_title.config(text=str(self.laptoplistings.keys()[self.listingposition]), font = ("arial", fontsize()))
-                #change listing number label forward
+                # Change listings title forward
+                result_title.config(text=self.laptoplistings.keys()[self.listingposition], font = ("arial", fontsize()))
+                # Change listing number label forward
                 position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
-                #change listing link forward
+                #   Change listing link forward
                 link()
-                #change price label forward
+                # Change price label forward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
 
             def lesslistings():
                 self.listingposition -= 1
-                # if scrolled to the start of the listings switch back to the last listing
+                # If scrolled to the start of the listings switch back to the last listing
                 if self.listingposition < 0:
                     self.listingposition = len(self.laptoplistings.keys()) - 1
-                #changes photo backward
+                # Changes photo backward
                 getphoto()
-                #change listings title backward
+                # Change listings title backward
                 result_title.config(text=self.laptoplistings.keys()[self.listingposition], font = ("arial", fontsize()))
-                # change listing number label backward
+                # Change listing number label backward
                 position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
-                # change listing link backward
+                # Change listing link backward
                 link()
-                #change price label backward
+                # Change price label backward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
 
 
-            #loads and displays the left and right arrows
+            # Loads and displays the left and right arrows
             moreresultsimgld = ImageTk.PhotoImage(Image.open(r"programphotos\rightarrow.png"))
             moreresultsarrow = Tkinter.Button(self.searchscreen_root, image=moreresultsimgld, bd=0, command=morelistings)
             moreresultsarrow.pack()
@@ -352,7 +350,7 @@ class search():  # brandchoices
 class parameterscreen:
 
     def __init__(self, txt):
-        # if i use Tkinter.Tk() for the parameter screen root the images dont work?
+        # If i use Tkinter.Tk() for the parameter screen root the images dont work?
         self.p_root = Tkinter.Toplevel()
         self.p_root.title("Pc finder")
         self.p_root.geometry("540x300")
@@ -364,7 +362,7 @@ class parameterscreen:
         paramlabel = Tkinter.Label(self.p_root, font="fixedsys", text=txt, bg="white")
         paramlabel.pack(fill = Tkinter.BOTH)
 
-    #function for the parameter screen budget scale
+    # Function for the parameter screen budget scale
     def range(self):
         self.pricerange = Tkinter.Scale(self.p_root, from_=0, to=2000, label="Budget", fg="darkgrey",
                                         orient=Tkinter.VERTICAL, length=250,                   #used root background
@@ -377,7 +375,7 @@ class parameterscreen:
     def choosecomputerbrand(self):
 
         def hpimgchg():
-            # changes button to a different image to let user know brand is selected.
+            # Changes button to a different image to let user know brand is selected.
 
             # Is  there a better solution for changing the images when I click on the button?
             # I would make this into a function so i dont have to add an extra 75 lines but
@@ -387,7 +385,7 @@ class parameterscreen:
                 hpselected = ImageTk.PhotoImage(Image.open(r"programphotos\hphover.jpg"))
                 self.hpbrand.config(image=hpselected)
                 self.hpbrand.image = hpselected
-                # adds keywords to brand choices
+                # Adds keywords to brand choices
                 self.brandchoices.extend(("hp", "Hp", "HP"))
 
             elif self.hpbrand.image != self.hpimg:
@@ -399,7 +397,7 @@ class parameterscreen:
 
             print self.brandchoices
 
-        # read this before hpimgchg
+        # Read this before hpimgchg
         self.hpimg = ImageTk.PhotoImage(Image.open(r"programphotos\hp.jpg"))
         self.hpbrand = Tkinter.Button(self.p_root, image=self.hpimg, bd=0, command=hpimgchg)
         self.hpbrand.image = self.hpimg
@@ -579,7 +577,7 @@ class parameterscreen:
         self.range()
         self.findbutton()
 
-    # how does this class work without me calling self.p_root.mainloop() ?
+    # How does this class work without me calling self.p_root.mainloop() ?
 
 
 class screen:
@@ -587,7 +585,7 @@ class screen:
         print "tacos"
         self.laptopordesktop = ""
 
-    # startupscreen and its widgets
+    # Startup screen and its widgets
     def startscreen(self):
         self.root = Tkinter.Tk()
         self.root.title("Pc finder")
@@ -610,7 +608,7 @@ class screen:
         ltImage.place(x=275, y=40)
 
         def Dtchangescreen():
-            # starts parameter screen(desktop version).
+            # Starts parameter screen(desktop version).
             self.laptopordesktop = "desktop"
             parameterscreen1 = parameterscreen("What kind of desktop would you like to find?")
             parameterscreen1.paramterwidgets()
@@ -623,7 +621,7 @@ class screen:
         b1.place(x=65, y=160)
 
         def Ltchangescreen():
-            # starts parameter screen(laptop version)
+            # Starts parameter screen(laptop version)
             self.laptopordesktop = "laptop"
             parameterscreen1 = parameterscreen("What kind of laptop would you like to find?")
             parameterscreen1.paramterwidgets()
@@ -637,6 +635,7 @@ class screen:
 
         #
 
-# starts the startup screen
+# Starts the startup screen
 Interface1 = screen()
 Interface1.startscreen()
+Interface1.root.mainloop()
