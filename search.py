@@ -25,17 +25,17 @@ class search():  # brandchoices
 
         if Interface1.laptopordesktop == "laptop":
 
-            geturl_newegg = requests.get("https://www.newegg.com/Product/ProductList.aspx?Submit=StoreIM&Depa=3&Category=223").text
+            geturl_hsn = requests.get("https://www.hsn.com/shop/laptops/ec0033").text
             geturl_microcenter = requests.get("http://www.microcenter.com/category/4294967288/Laptops-Notebooks").text
             geturl_tigerdirect = requests.get("http://www.tigerdirect.com/applications/category/category_tlc.asp?CatId=17").text
 
         elif Interface1.laptopordesktop == "desktop":
 
-            geturl_newegg = requests.get("https://www.newegg.com/Product/ProductList.aspx?Submit=StoreIM&Depa=3&Category=228").text
+            geturl_hsn = requests.get("https://www.hsn.com/shop/desktop-computers/ec0031?akamai-feo=off").text
             geturl_microcenter = requests.get("http://www.microcenter.com/category/4294967292/All-Desktops").text
             geturl_tigerdirect = requests.get("http://www.tigerdirect.com/applications/category/category_tlc.asp?CatId=6").text
 
-        self.newegg_soup = bs(geturl_newegg, "html.parser")
+        self.hsn_soup = bs(geturl_hsn, "html.parser")
         self.microcenter_soup = bs(geturl_microcenter, "html.parser")
         self.tigerdirect_soup = bs(geturl_tigerdirect, "lxml")
 
@@ -60,6 +60,62 @@ class search():  # brandchoices
         self.laptoplistings = {}
         # variables for the searchscreen object
         self.listingposition = 0
+
+    def hsn(self):
+        for g in self.hsn_soup("li", class_ = "item product-item module violated"):
+            self.titleposition += 1
+
+            hsnstringtitles = g.find("span", itemprop = "name").text
+            hsnrawtitles = hsnstringtitles.split()
+
+            for hsntitlekeywords in hsnrawtitles:
+                if hsntitlekeywords in self.computerbrandchoices:
+                    # adds the title to the title list
+                    if len(hsnrawtitles) > 25: #splits the title in half if its too long.
+                        try:
+                            cut = len(hsnrawtitles) / 2
+                            tdtitle_firsthalf = str(" ".join(hsnrawtitles[:cut]))
+                            tdtitle_secondhalf = str(" ".join(hsnrawtitles[cut:]))
+                            self.titles.append(tdtitle_firsthalf + '\n' + tdtitle_secondhalf)
+
+                        except:  # Unicode error, happens every 1/300
+                            print "unicode error"
+                            self.titles.append(hsnstringtitles)
+
+                    else:
+                        self.titles.append(hsnstringtitles)
+
+                    self.titleposition_compare.append(self.titleposition)
+                    #gets hsn link
+                    hsnlink = "https://www.hsn.com" + str(g["data-product-url"])
+                    self.rawlinks.append(hsnlink)
+                    #gets hsn photo link
+                    hsnphotolink = str(g.find("img", class_ = "lazy")["data-original"])
+                    self.imglist.append(hsnphotolink)
+
+
+        for h in self.hsn_soup.find_all("dd", class_ = "pricing"):
+            self.priceposition += 1
+
+            if self.priceposition in self.titleposition_compare:
+                hsnrawprice = str(h.find("strong").text)
+                try:
+                    print len(hsnrawprice)
+                    if len(hsnrawprice) == 9:
+                        hsnprice = hsnrawprice[2:5]
+
+                    elif len(hsnrawprice) == 10:
+                        hsnprice = hsnrawprice[2:6]
+
+                    else:
+                        hsnprice = 2001
+
+                    print hsnprice
+                    self.price.append(int(hsnprice))
+
+                except:
+                    self.price.append(2001)
+
 
     # Any efforts to increase the speed of the microcenter search process are appreciated
     def microcenter(self):
@@ -109,7 +165,6 @@ class search():  # brandchoices
                         self.price.append(2001)
 
                     # Gets the image
-                    print str(m.find("a")["href"])
                     mcimageurl = requests.get("http://www.microcenter.com" + str(m.find("a")["href"])).text
                     mcimagesoup = bs(mcimageurl, "html.parser")
 
@@ -122,9 +177,10 @@ class search():  # brandchoices
                         # Adds image unavailable image when unicode error or listing has no image.
                         self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
 
+
             except:
                 print "tag error, update microcenter function"
-
+            print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
 
     def tigerdirect(self):
         # Gets tigerdirect titles and links
@@ -150,11 +206,14 @@ class search():  # brandchoices
                     else:
                         self.titles.append(tdstringtitles)
 
-                    # gets tigerdirect link minus the first two characters.
-                    self.rawlinks.append("http://www.tigerdirect.com/applications" + str(d.find("a")["href"][2:]))
                     self.titleposition_compare.append(self.titleposition)
+
+                    # gets tigerdirect link minus the first two characters.
+                    tdlink = str(d.find("a")["href"][2:])
+                    self.rawlinks.append("http://www.tigerdirect.com/applications" + tdlink)
                     # gets tigerdirect images
-                    self.imglist.append(str(d.find("img")["data-yo-src"]))
+                    tdimage = str(d.find("img")["data-yo-src"])
+                    self.imglist.append(tdimage)
 
         # Gets price
         for f in self.tigerdirect_soup.find_all("div", class_="salePrice"):
@@ -185,6 +244,7 @@ class search():  # brandchoices
                 except:
                     self.price.append(2001)
                     #unicode error
+        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
 
     def compare(self):
         # Loop through the techbargain title and price lists and adds the collected values to the dictionary
@@ -195,8 +255,11 @@ class search():  # brandchoices
 
 
     def searchscreen(self):
+
+        self.hsn()
         self.microcenter()
         self.tigerdirect()
+
         self.compare()
 
         if len(self.laptoplistings) == 0:
