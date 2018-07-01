@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as bs
 import requests
 import urllib
 import random
+import time
 import os
 import webbrowser
 
@@ -180,6 +181,7 @@ class search():  # brandchoices
             except:
                 print "tag error, update microcenter function"
 
+    
     def tigerdirect(self):
         # Gets tigerdirect titles and links
         for d in self.tigerdirect_soup.find_all("div", class_="productImage"):
@@ -252,12 +254,13 @@ class search():  # brandchoices
 
 
     def searchscreen(self):
-
+        # Starts the data-collection process through all the websites.
         self.hsn()
         self.microcenter()
         self.tigerdirect()
-
+        # Starts the process to store all the data together in a dictionary
         self.compare()
+
 
         if len(self.laptoplistings) == 0:
             Noresultstext = Tkinter.Label(self.searchscreen_root,text = "Sorry, there are no results available.",
@@ -407,7 +410,7 @@ class search():  # brandchoices
             self.searchscreen_root.mainloop()
 
 
-class parameterscreen:
+class parameterscreen():
 
     def __init__(self, txt):
         # If i use Tkinter.Tk() for the parameter screen root the images dont work?
@@ -421,6 +424,13 @@ class parameterscreen:
         #loads and displays the parameterscreen title
         paramlabel = Tkinter.Label(self.p_root, font="fixedsys", text=txt, bg="white")
         paramlabel.pack(fill = Tkinter.BOTH)
+
+        # Loads the wait label but doesnt display it until search button is clicked
+        self.loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
+                                      font="fixedsys", fg=self.p_root.cget("bg"))
+        self.loadtimelabel.pack()
+        self.loadtimelabel.place(x=370, y=260)
+
 
     # Function for the parameter screen budget scale
     def range(self):
@@ -620,8 +630,14 @@ class parameterscreen:
         self.msibrand.place(x=350, y=150)
 
     def findbutton(self):
+        
+        loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
+                                      font=("Arial", 8), fg=self.p_root.cget("bg"))
+        loadtimelabel.pack()
+        loadtimelabel.place(x=160, y=265)
 
         def buttoncommand():
+            
             self.searchtrigger = search(self.pricerange.get(), self.brandchoices)
             self.searchtrigger.searchscreen()
 
@@ -633,14 +649,13 @@ class parameterscreen:
         searchbutton.place(x=450, y=260)
 
     def paramterwidgets(self):
+        #starts all parameter screen widgets
         self.choosecomputerbrand()
         self.range()
         self.findbutton()
 
-    # How does this class work without me calling self.p_root.mainloop() ?
-
-
-class screen:
+        
+class screen():
     def __init__(self):
         print "tacos"
         self.laptopordesktop = ""
@@ -650,8 +665,7 @@ class screen:
         self.root = Tkinter.Tk()
         self.root.title("Pc finder")
         self.root.geometry("440x200")
-        #
-        self.defaultbg = self.root.cget("bg")
+
         #loads and displays the title for the startup screen
         startscreen_title = Tkinter.Label(self.root, font="fixedsys", text="What kind of computer would you like to find?",
                                width=40, bg="white")
@@ -675,8 +689,8 @@ class screen:
 
         # Buttons
         b1 = Tkinter.Button(self.root, font="fixedsys", text="Desktops",
-                            bg=self.defaultbg, command=Dtchangescreen
-                            )
+                            bg=self.root.cget("bg"), command=Dtchangescreen
+                            )   #gets default background
         b1.pack()
         b1.place(x=65, y=160)
 
@@ -687,7 +701,7 @@ class screen:
             parameterscreen1.paramterwidgets()
 
         b2 = Tkinter.Button(self.root, font="fixedsys", text="Laptops",
-                            bg=self.defaultbg, command=Ltchangescreen
+                            bg=self.root.cget("bg"), command=Ltchangescreen
                             )
 
         b2.pack()
