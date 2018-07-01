@@ -177,10 +177,8 @@ class search():  # brandchoices
                         # Adds image unavailable image when unicode error or listing has no image.
                         self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
 
-
             except:
                 print "tag error, update microcenter function"
-            print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
 
     def tigerdirect(self):
         # Gets tigerdirect titles and links
@@ -244,7 +242,6 @@ class search():  # brandchoices
                 except:
                     self.price.append(2001)
                     #unicode error
-        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist)
 
     def compare(self):
         # Loop through the techbargain title and price lists and adds the collected values to the dictionary
