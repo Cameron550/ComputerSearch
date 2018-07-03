@@ -91,8 +91,12 @@ class search():  # brandchoices
                     hsnlink = "https://www.hsn.com" + str(g["data-product-url"])
                     self.rawlinks.append(hsnlink)
                     #gets hsn photo link
-                    hsnphotolink = str(g.find("img", class_ = "lazy")["data-original"])
-                    self.imglist.append(hsnphotolink)
+                    try:
+                        hsnphotolink = str(g.find("img", class_ = "lazy")["data-original"])
+                        self.imglist.append(hsnphotolink)
+
+                    except:
+                        self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
 
 
         for h in self.hsn_soup.find_all("dd", class_ = "pricing"):
@@ -181,7 +185,7 @@ class search():  # brandchoices
             except:
                 print "tag error, update microcenter function"
 
-    
+
     def tigerdirect(self):
         # Gets tigerdirect titles and links
         for d in self.tigerdirect_soup.find_all("div", class_="productImage"):
@@ -296,17 +300,18 @@ class search():  # brandchoices
                 else:
                     return 8
 
-            result_title = Tkinter.Label(self.searchscreen_root, text=str(self.laptoplistings.keys()[0]),
+            result_title = Tkinter.Label(self.searchscreen_root, text=self.laptoplistings.keys()[0],
                                     fg="black", font=("arial", fontsize()))
+
             result_title.pack()
 
             urllib.urlretrieve(self.laptoplistings.values()[0][1], "firstphoto" + ".jpg")
 
             # Loads and displays the first image and title then deletes the image so its not saved on the hard drive
-            PILLfirstphotold = Image.open("firstphoto" + ".jpg")
+            PILfirstphotold = Image.open("firstphoto" + ".jpg")
             # Configures the size of the image
-            PILLfirstphotoconfig = ImageOps.fit(PILLfirstphotold, (210, 160), Image.ANTIALIAS)
-            firstphotoLd = ImageTk.PhotoImage(PILLfirstphotoconfig)
+            PILfirstphotoconfig = PILfirstphotold.resize((240, 170), Image.ANTIALIAS)
+            firstphotoLd = ImageTk.PhotoImage(PILfirstphotoconfig)
 
             photo = Tkinter.Label(self.searchscreen_root, image=firstphotoLd, bg="darkgrey", bd=2)
             photo.image = firstphotoLd
@@ -341,11 +346,11 @@ class search():  # brandchoices
                     # Loads and displays the image
                     PILphotold = Image.open(randomphotoname + ".jpg")
                                          # Changes img size to a default
-                    PILLphotold_config = ImageOps.fit(PILphotold, (210, 160), Image.ANTIALIAS)
-                    tkinterphotoLd = ImageTk.PhotoImage(PILLphotold_config)
+                    PILphotold_config = PILphotold.resize((240, 170), Image.ANTIALIAS)
+                    listingphoto = ImageTk.PhotoImage(PILphotold_config)
 
-                    photo.config(image=tkinterphotoLd)
-                    photo.image = tkinterphotoLd
+                    photo.config(image=listingphoto)
+                    photo.image = listingphoto
                     photo.pack()
                     photo.place(x=100, y=75)
                     # Removes the photo from laptopfinder file.
@@ -609,8 +614,7 @@ class parameterscreen():
 
         def msiimgchg():
             if self.msibrand.image == self.msiimg:
-                self.msiselected = ImageTk.PhotoImage(
-                    Image.open(r"programphotos\msiselected.jpg"))
+                self.msiselected = ImageTk.PhotoImage(Image.open(r"programphotos\msiselected.jpg"))
                 self.msibrand.config(image=self.msiselected)
                 self.msibrand.image = self.msiselected
 
@@ -630,14 +634,14 @@ class parameterscreen():
         self.msibrand.place(x=350, y=150)
 
     def findbutton(self):
-        
+
         loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
-                                      font=("Arial", 8), fg=self.p_root.cget("bg"))
+                                      font=("Arial", 8), fg="lightgrey")
         loadtimelabel.pack()
         loadtimelabel.place(x=160, y=265)
 
         def buttoncommand():
-            
+
             self.searchtrigger = search(self.pricerange.get(), self.brandchoices)
             self.searchtrigger.searchscreen()
 
@@ -654,7 +658,7 @@ class parameterscreen():
         self.range()
         self.findbutton()
 
-        
+
 class screen():
     def __init__(self):
         print "tacos"
