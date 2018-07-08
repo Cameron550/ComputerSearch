@@ -57,6 +57,9 @@ class search():  # brandchoices
         self.imglist = []
         self.imgposition = 0
 
+        self.starlist = []
+        self.starposition = 0
+
         # variable for the compare object
         self.laptoplistings = {}
         # variables for the searchscreen object
@@ -99,103 +102,142 @@ class search():  # brandchoices
                         self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
 
 
-        for h in self.hsn_soup.find_all("dd", class_ = "pricing"):
-            self.priceposition += 1
 
-            if self.priceposition in self.titleposition_compare:
-                hsnrawprice = str(h.find("strong").text)
-                try:
-                    print len(hsnrawprice)
-                    if len(hsnrawprice) == 9:
-                        hsnprice = hsnrawprice[2:5]
+                    try:
+                        hsnrawprice = str(g.find("span", itemprop = "price").text)
 
-                    elif len(hsnrawprice) == 10:
-                        hsnprice = hsnrawprice[2:6]
+                        if len(hsnrawprice) == 6:
+                            hsnprice = hsnrawprice[0:3]
 
-                    else:
-                        hsnprice = 2001
+                        elif len(hsnrawprice) == 7:
+                            hsnprice = hsnrawprice[0:4]
 
-                    print hsnprice
-                    self.price.append(int(hsnprice))
+                        else:
+                            hsnprice = 2001
 
-                except:
-                    self.price.append(2001)
+
+                        self.price.append(int(hsnprice))
+
+                    except:
+                        self.price.append(2001)
+
+
+                    try:  # Try because some listings dont have html if there is no reviews.
+                        raw_hsn_starrating = g.find("span", itemprop="ratingValue").text
+
+                        # Asks if the length is equal to that of a float or a interger.
+                        if len(raw_hsn_starrating) == 3:
+                            # changes it from unicode to back to a float then rounds it.
+                            hsn_starrating = int(round(float(raw_hsn_starrating)))
+                            self.starlist.append(hsn_starrating)
+
+                        elif len(raw_hsn_starrating) == 1:
+                            hsn_starrating = int(raw_hsn_starrating)
+                            self.starlist.append(hsn_starrating)
+
+                        else:
+                            self.starlist.append(0)
+
+                    except:
+                        self.starlist.append(0)
+
 
 
     # Any efforts to increase the speed of the microcenter search process are appreciated
     def microcenter(self):
-        for m in self.microcenter_soup.find_all("div", class_ = "normal"):
-            try:
-                mcstringtitles = str(m.find("a").text)
-                print mcstringtitles
-                brandname = m.find("a")["data-brand"]
+        # Gets the main product tag
+        for m in self.microcenter_soup.find_all("li", class_ = "product_wrapper"):
+            self.titleposition += 1
+            mcstringtitles = str(m.find("div", class_="normal").text)
+            mcrawtitles = mcstringtitles.split()
+            # Gets the products brand
+            rawbrandname = m.find("div", class_= "normal")
+            brandname = rawbrandname.find("a")["data-brand"]
 
+            if brandname in self.computerbrandchoices:
+                # adds the title to the title list
+                if len(mcrawtitles) > 15:
+                    cut = len(mcrawtitles) / 2
+                    mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
+                    mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
 
-                mcrawtitles = mcstringtitles.split()
+                    self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
 
-                if brandname in self.computerbrandchoices:
-                    # adds the title to the title list
-                    if len(mcrawtitles) > 15:
-                        cut = len(mcrawtitles) / 2
-                        mctitle_firsthalf = str(" ".join(mcrawtitles[:cut]))
-                        mctitle_secondhalf = str(" ".join(mcrawtitles[cut:]))
+                else:
+                    self.titles.append(mcstringtitles)
 
-                        self.titles.append(mctitle_firsthalf + "\n" + mctitle_secondhalf)
+                self.titleposition_compare.append(self.titleposition)
 
-                    else:
-                        self.titles.append(mcstringtitles)
+                # adds the link to the link list
+                mcrawlink = m.find("div", class_ = "normal")
+                mclink = str(mcrawlink.find("a")["href"])
 
-                    # adds the link to the link list
-                    self.rawlinks.append("www.microcenter.com" + str(m.find("a")["href"]))
+                self.rawlinks.append("www.microcenter.com" + mclink)
 
-                    # adds the listing price to the price list
-                    mcrawprice = str(m.find("a")["data-price"])
-                    mcprice = mcrawprice
+                # adds the listing price to the price list
+                mcrawprice = m.find("div", class_ = "normal")
+                mcpricedata = str(mcrawprice.find("a")["data-price"])
 
-                    try:
-                        if len(mcrawprice) == 5:
-                            self.price.append(int(mcprice[0:2]))
+                try:
+                    print len(mcpricedata)
+                    if len(mcpricedata) == 5:
+                        mcprice = int(mcpricedata[0:2])
 
-                        elif len(mcrawprice) == 6:
-                            self.price.append(int(mcprice[0:3]))
+                    elif len(mcpricedata) == 6:
+                        mcprice = int(mcpricedata[0:3])
 
-                        elif len(mcrawprice) == 7:
-                            self.price.append(int(mcprice[0:4]))
+                    elif len(mcpricedata) == 7:
+                        mcprice = int(mcpricedata[0:4])
 
-                        else:               # 1 dollar above max budget
-                                                # to phase out listing
-                            self.price.append(2001)
-                    except:
-                        print "unicode error in microcenter price"
-                        self.price.append(2001)
+                    else:              # 1 dollar above max budget
+                                            # to phase out listing
+                        mcprice = 2001
 
-                    # Gets the image
-                    mcimageurl = requests.get("http://www.microcenter.com" + str(m.find("a")["href"])).text
-                    mcimagesoup = bs(mcimageurl, "html.parser")
+                    self.price.append(mcprice)
+                except:
+                    print "unicode error in microcenter price"
+                    self.price.append(2001)
 
-                    try:
+                # Gets the image
 
-                        for n in mcimagesoup.find("div", class_ = "image-slide"):
-                            self.imglist.append(n.find("img", class_ = "productImageZoom")["src"])
+                # Opens the listing page to get the image
+                mcimageurl = requests.get("http://www.microcenter.com" + mclink).text
+                mcimagesoup = bs(mcimageurl, "html.parser")
 
-                    except:
-                        # Adds image unavailable image when unicode error or listing has no image.
-                        self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
+                try:
 
-            except:
-                print "tag error, update microcenter function"
+                    mcrawimg = mcimagesoup.find("div", class_ = "image-slide")
+                    mcimg = mcrawimg.find("img", class_ = "productImageZoom")["src"]
+                    self.imglist.append(mcimg)
 
+                except:
+                    # Adds image unavailable image when unicode error or listing has no image.
+                    self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
+
+                #
+                # Formats then adds the star rating
+                try:
+                    rawstars = m.find("div", class_="ratingstars")
+
+                    mc_starrating = int(rawstars.text[:3])
+                    print mc_starrating
+                    self.starlist.append(mc_starrating)
+
+                except:
+                    self.starlist.append(0)
+
+        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist), len(self.starlist)
 
     def tigerdirect(self):
         # Gets tigerdirect titles and links
-        for d in self.tigerdirect_soup.find_all("div", class_="productImage"):
-            self.titleposition += 1
+        for d in self.tigerdirect_soup.find_all("div", class_="product"):
 
-            tdstringtitles = d.find("a")["title"]
+            tdstringtitles = d.find("a", class_ = "itemImage")["title"]
             tdrawtitles = tdstringtitles.split()
 
             for tdtitlekeywords in tdrawtitles:
                 if tdtitlekeywords in self.computerbrandchoices:
+                    #splits the title
                     if len(tdrawtitles) > 25:
                         try:
                             cut = len(tdrawtitles) / 2
@@ -210,51 +252,71 @@ class search():  # brandchoices
                     else:
                         self.titles.append(tdstringtitles)
 
-                    self.titleposition_compare.append(self.titleposition)
 
                     # gets tigerdirect link minus the first two characters.
-                    tdlink = str(d.find("a")["href"][2:])
+                    tdlink = str(d.find("a", class_ = "itemImage")["href"][2:])
                     self.rawlinks.append("http://www.tigerdirect.com/applications" + tdlink)
                     # gets tigerdirect images
                     tdimage = str(d.find("img")["data-yo-src"])
                     self.imglist.append(tdimage)
 
-        # Gets price
-        for f in self.tigerdirect_soup.find_all("div", class_="salePrice"):
-            self.priceposition += 1
-            if self.priceposition in self.titleposition_compare:
-                try:
-                    tdrawprice = f.text
+                    # Gets price
+                    try:
+                        tdrawprice_parenttag = d.find("div", class_ = "productAction")
+                        tdrawprice = tdrawprice_parenttag.find("div", class_= "salePrice").text
 
-                    if len(tdrawprice) == 14:
-                        self.price.append(int(f.text[7:10]))
+                        if len(tdrawprice) == 14:
+                            tdprice = int(tdrawprice[7:10])
 
-                    elif len(tdrawprice) == 15:
-                        self.price.append(int(f.text[8:11]))
+                        elif len(tdrawprice) == 15:
+                            tdprice = int(tdrawprice[8:11])
 
-                    elif len(tdrawprice) == 16:
-                        self.price.append(int(f.text[9:12]))
+                        elif len(tdrawprice) == 16:
+                            tdprice = int(tdrawprice[9:12])
 
-                    elif len(tdrawprice) == 17:
-                        self.price.append(int(f.text[10:13]))
+                        elif len(tdrawprice) == 17:
+                            tdprice = int(tdrawprice[10:13])
 
-                    elif len(tdrawprice) == 18:
-                        self.price.append(int(f.text[11:14]))
+                        elif len(tdrawprice) == 18:
+                            tdprice = int(tdrawprice[11:14])
 
-                    elif len(tdrawprice) == 19:
-                        self.price.append(int(f.text[12:15]))
-                    else:
+                        elif len(tdrawprice) == 19:
+                            tdprice = int(tdrawprice[12:15])
+                        else:
+                            tdprice = 2001
+
+                        self.price.append(tdprice)
+
+                    except:
                         self.price.append(2001)
-                except:
-                    self.price.append(2001)
-                    #unicode error
+                        print "td price error"
+
+                    #gets tigerdirect star rating for listing
+                    try:
+                        tdrawstars = d.find("a", class_ = "itemRating")["title"]
+
+                        if str(tdrawstars) == "Be the first to write a review":
+                            tdstars = 0
+                        else:
+
+                            tdstars = str(tdrawstars[0:1])
+                            print tdstars
+
+                        self.starlist.append(tdstars)
+
+                    except:
+                        self.starlist.append(0)
+                        print "td starlist error"
+
+        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist), self.starlist
+
 
     def compare(self):
         # Loop through the techbargain title and price lists and adds the collected values to the dictionary
         # if the price is less or equal to the set budget
         for c in range(len(self.titles)):
             if self.price[c] <= self.computerbudget:
-                self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c]]
+                self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c], self.starlist[c]]
 
 
     def searchscreen(self):
@@ -301,7 +363,7 @@ class search():  # brandchoices
                     return 8
 
             result_title = Tkinter.Label(self.searchscreen_root, text=self.laptoplistings.keys()[0],
-                                    fg="black", font=("arial", fontsize()))
+                                    fg="darkgrey", font=("arial", fontsize()))
 
             result_title.pack()
 
@@ -318,9 +380,27 @@ class search():  # brandchoices
 
 
             photo.pack()
-            photo.place(x=100, y=75)
+            photo.place(x=80, y=75)
             # Removes the photo from laptopfinder file.
             os.remove("firstphoto" + ".jpg")
+
+
+            def starrating():
+
+                if int(self.laptoplistings.values()[self.listingposition][3]) != 0:
+                    starlength = "programphotos" + "/" + str(self.laptoplistings.values()[self.listingposition][3]) + "star.png"
+
+                else:
+                    starlength = "programphotos/0star.png"
+
+                return starlength
+
+            starimgLd = ImageTk.PhotoImage(Image.open(starrating()))
+
+            starimg = Tkinter.Label(self.searchscreen_root, image = starimgLd, bg = "darkgrey",  bd = 2)
+            starimg.pack()
+            starimg.place(x = 350, y = 100)
+
 
             # Loads and displays the listing position
             position = Tkinter.Label(self.searchscreen_root, text = "0/" + str(len(self.laptoplistings.keys()) - 1),
@@ -334,7 +414,7 @@ class search():  # brandchoices
                                         font = ("fixedsys", 15), fg = "darkgrey")
 
             pricelabel.pack()
-            pricelabel.place(x = 370, y = 100)
+            pricelabel.place(x = 370, y = 200)
 
 
             def getphoto():
@@ -352,7 +432,7 @@ class search():  # brandchoices
                     photo.config(image=listingphoto)
                     photo.image = listingphoto
                     photo.pack()
-                    photo.place(x=100, y=75)
+                    photo.place(x=80, y=75)
                     # Removes the photo from laptopfinder file.
                     os.remove(randomphotoname + ".jpg")
 
@@ -362,7 +442,6 @@ class search():  # brandchoices
             def link():
                 linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][2]))
 
-            link()
 
             def morelistings():
                 self.listingposition += 1
@@ -379,6 +458,9 @@ class search():  # brandchoices
                 position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
                 #   Change listing link forward
                 link()
+                starimgLd_config = ImageTk.PhotoImage(Image.open(starrating()))
+                starimg.config(image = starimgLd_config)
+                starimg.image = starimgLd_config
                 # Change price label forward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
@@ -396,6 +478,9 @@ class search():  # brandchoices
                 position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
                 # Change listing link backward
                 link()
+                starimgLd_config = ImageTk.PhotoImage(Image.open(starrating()))
+                starimg.config(image=starimgLd_config)
+                starimg.image = starimgLd_config
                 # Change price label backward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
@@ -638,7 +723,7 @@ class parameterscreen():
         loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
                                       font=("Arial", 8), fg="lightgrey")
         loadtimelabel.pack()
-        loadtimelabel.place(x=160, y=265)
+        loadtimelabel.place(x=130, y=265)
 
         def buttoncommand():
 
