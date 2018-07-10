@@ -1,3 +1,4 @@
+
 from PIL import Image, ImageTk, ImageOps
 import Tkinter
 from bs4 import BeautifulSoup as bs
@@ -395,11 +396,34 @@ class search():  # brandchoices
 
                 return starlength
 
-            starimgLd = ImageTk.PhotoImage(Image.open(starrating()))
+            starget = starrating()
+            starimgLd = ImageTk.PhotoImage(Image.open(starget))
 
             starimg = Tkinter.Label(self.searchscreen_root, image = starimgLd, bg = "darkgrey",  bd = 2)
             starimg.pack()
-            starimg.place(x = 350, y = 100)
+            starimg.place(x = 350, y = 90)
+
+
+            def seereviews_visible():
+                # Asks if the star rating isnt 0
+                if int(self.laptoplistings.values()[self.listingposition][3]) != 0:
+                    seereviews_text = "(See Reviews)"
+
+                else:
+                    seereviews_text = ""
+
+                return seereviews_text
+
+
+            def seereviews_link():
+                webbrowser.open_new(self.laptoplistings.values()[self.listingposition][2])
+
+
+            seereviews = Tkinter.Button(self.searchscreen_root, font = "fixedsys", bd = 0,
+                                       fg = "darkgrey", text = seereviews_visible(),
+                                        command = seereviews_link)
+            seereviews.pack()
+            seereviews.place(x = 373, y = 147)
 
 
             # Loads and displays the listing position
@@ -439,9 +463,6 @@ class search():  # brandchoices
                 except:
                     print "download error"
 
-            def link():
-                linkbutton.config(text = str(self.laptoplistings.values()[self.listingposition][2]))
-
 
             def morelistings():
                 self.listingposition += 1
@@ -457,13 +478,17 @@ class search():  # brandchoices
                 # Change listing number label forward
                 position.config(text = str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
                 #   Change listing link forward
-                link()
-                starimgLd_config = ImageTk.PhotoImage(Image.open(starrating()))
-                starimg.config(image = starimgLd_config)
-                starimg.image = starimgLd_config
+                linkbutton.config(text=str(self.laptoplistings.values()[self.listingposition][2]))
+
                 # Change price label forward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
+
+                starimgLd_config = ImageTk.PhotoImage(Image.open(starrating()))
+                starimg.config(image=starimgLd_config)
+                starimg.image = starimgLd_config
+                # Configures the See Reviews link to be visible or invisible
+                seereviews.config(text = seereviews_visible())
 
             def lesslistings():
                 self.listingposition -= 1
@@ -477,13 +502,16 @@ class search():  # brandchoices
                 # Change listing number label backward
                 position.config(text=str(self.listingposition) + "/" + str(len(self.laptoplistings.keys()) - 1))
                 # Change listing link backward
-                link()
+                linkbutton.config(text=str(self.laptoplistings.values()[self.listingposition][2]))
+
                 starimgLd_config = ImageTk.PhotoImage(Image.open(starrating()))
                 starimg.config(image=starimgLd_config)
                 starimg.image = starimgLd_config
                 # Change price label backward
                 pricelabel.config(text="Price: " + "$" +
                                    str(self.laptoplistings.values()[self.listingposition][0]))
+                # Configures the See Reviews link to be visible or invisible
+                seereviews.config(text=seereviews_visible())
 
 
             # Loads and displays the left and right arrows
