@@ -10,12 +10,7 @@ import os
 import webbrowser
 
 
-# I know this my code format is probably confusing.Id also advise reading the code from the bottom to the top
-#  This is the first program I spent a lot of time trying to
-# figure out how to arrange. This is also my first gui program.  :) - Cameron
-
-
-class search():  # brandchoices
+class search():                # brandchoices
     def __init__(self, budget, bchoices):
 
         self.searchscreen_root = Tkinter.Toplevel()
