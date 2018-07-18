@@ -1,4 +1,3 @@
-
 from PIL import Image, ImageTk, ImageOps
 import Tkinter
 from bs4 import BeautifulSoup as bs
@@ -10,8 +9,13 @@ import os
 import webbrowser
 
 
-class search():                # brandchoices
-    def __init__(self, budget, bchoices):
+# I know this my code format is probably confusing.Id also advise reading the code from the bottom to the top
+#  This is the first program I spent a lot of time trying to
+# figure out how to arrange. This is also my first gui program.  :) - Cameron
+
+
+class search():  # brandchoices
+    def __init__(self, budget, goodreviewschoice, bchoices):
 
         self.searchscreen_root = Tkinter.Toplevel()
         self.searchscreen_root.geometry("600x300")
@@ -37,6 +41,7 @@ class search():                # brandchoices
         self.tigerdirect_soup = bs(geturl_tigerdirect, "lxml")
 
         self.computerbudget = budget
+        self.reviewswitch = goodreviewschoice
         self.computerbrandchoices = bchoices
 
         #listing variables
@@ -96,7 +101,6 @@ class search():                # brandchoices
 
                     except:
                         self.imglist.append("https://abtsmoodle.org/abtslebanon.org/wp-content/uploads/2017/10/image_unavailable.jpg")
-
 
 
                     try:
@@ -222,7 +226,6 @@ class search():                # brandchoices
                 except:
                     self.starlist.append(0)
 
-        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist), len(self.starlist)
 
     def tigerdirect(self):
         # Gets tigerdirect titles and links
@@ -304,14 +307,20 @@ class search():                # brandchoices
                         self.starlist.append(0)
                         print "td starlist error"
 
-        print len(self.titles), len(self.price), len(self.rawlinks), len(self.imglist), self.starlist
-
 
     def compare(self):
         # Loop through the techbargain title and price lists and adds the collected values to the dictionary
         # if the price is less or equal to the set budget
+
         for c in range(len(self.titles)):
-            if self.price[c] <= self.computerbudget:
+
+            if self.reviewswitch == True:
+                extracompare = self.starlist[c]
+            else:
+                #makes the star comparison 4 if good reviews switch is off to include the listing
+                extracompare = 4
+
+            if self.price[c] <= self.computerbudget and extracompare > 3:
                 self.laptoplistings[self.titles[c]] = [self.price[c], self.imglist[c], self.rawlinks[c], self.starlist[c]]
 
 
@@ -532,17 +541,12 @@ class parameterscreen():
         self.p_root.geometry("540x300")
 
         self.budget1 = 0
+        self.goodreviews_onoroff = False
 
         self.brandchoices = []
         #loads and displays the parameterscreen title
         paramlabel = Tkinter.Label(self.p_root, font="fixedsys", text=txt, bg="white")
         paramlabel.pack(fill = Tkinter.BOTH)
-
-        # Loads the wait label but doesnt display it until search button is clicked
-        self.loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
-                                      font="fixedsys", fg=self.p_root.cget("bg"))
-        self.loadtimelabel.pack()
-        self.loadtimelabel.place(x=370, y=260)
 
 
     # Function for the parameter screen budget scale
@@ -741,16 +745,29 @@ class parameterscreen():
         self.msibrand.pack()
         self.msibrand.place(x=350, y=150)
 
-    def findbutton(self):
+    def goodreviews(self):
+        
+        def switch():
+            if self.goodreviews_onoroff == False:
+                self.goodreviews_onoroff = True
 
-        loadtimelabel = Tkinter.Label(self.p_root, text="Please wait 30 seconds to 1 minute for results to load.",
-                                      font=("Arial", 8), fg="lightgrey")
-        loadtimelabel.pack()
-        loadtimelabel.place(x=130, y=265)
+            else:
+                self.goodreviews_onoroff = False
+
+            print self.goodreviews_onoroff
+
+
+        goodreview_switch = Tkinter.Checkbutton(self.p_root, text = "Only show listings with good reviews.",
+                                                font = "fixedsys", fg = "darkgrey", command = switch)
+        goodreview_switch.pack()
+        goodreview_switch.place(x = 110, y = 260)
+
+
+    def findbutton(self):
 
         def buttoncommand():
 
-            self.searchtrigger = search(self.pricerange.get(), self.brandchoices)
+            self.searchtrigger = search(self.pricerange.get(), self.goodreviews_onoroff, self.brandchoices)
             self.searchtrigger.searchscreen()
 
         # Button that triggers the search class in the search file
@@ -764,6 +781,7 @@ class parameterscreen():
         #starts all parameter screen widgets
         self.choosecomputerbrand()
         self.range()
+        self.goodreviews()
         self.findbutton()
 
 
