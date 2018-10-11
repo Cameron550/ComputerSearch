@@ -304,7 +304,7 @@ class search():
 
 
     def compare(self):
-        # Loop through the techbargain title and price lists and adds the collected values to the dictionary
+        # Loop through the websites title and price lists and adds the collected values to the dictionary
         # if the price is less or equal to the set budget
 
         for c in range(len(self.titles)):
