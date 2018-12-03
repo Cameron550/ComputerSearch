@@ -35,6 +35,10 @@ class searchscreen():
         # Starts the process to store all the data together in a dictionary
         self.listings = search1.compare()
         print len(self.listings), "tacos"
+        
+        
+        #From here on the code gets kind of messy, im working on cleaning it up. I know all this data should not be in just 
+        #one function but I got lazy.
 
         self.searchscreen_root = Tkinter.Toplevel()
         self.searchscreen_root.geometry("600x300")
@@ -42,7 +46,6 @@ class searchscreen():
 
         self.searchtitle = Tkinter.Label(self.searchscreen_root, text="Search Results", bg="white", font="fixedsys")
         self.searchtitle.pack(fill=Tkinter.X)
-
 
 
 
