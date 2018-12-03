@@ -290,4 +290,3 @@ class search():
                                                        self.starlist[c]]
 
         return self.laptoplistings
-
