@@ -1,4 +1,4 @@
-from PIL import Image, ImageTk, ImageOps
+from PIL import Image, ImageTk
 import Tkinter
 import urllib
 import random
@@ -7,11 +7,12 @@ import webbrowser
 from Searchprocess import search
 
 
-
 class searchscreen():
 
     def __init__(self):
+        self.listings = ""
         self.listingposition = 0
+
 
     def Initialize_Searchprocess(self, myprice, reviews, mybrand):
 
@@ -34,11 +35,9 @@ class searchscreen():
         search1.tigerdirect()
         # Starts the process to store all the data together in a dictionary
         self.listings = search1.compare()
-        print len(self.listings), "tacos"
-        
-        
-        #From here on the code gets kind of messy, im working on cleaning it up. I know all this data should not be in just 
-        #one function but I got lazy.
+
+
+    def results_screen(self):
 
         self.searchscreen_root = Tkinter.Toplevel()
         self.searchscreen_root.geometry("600x300")
@@ -47,9 +46,7 @@ class searchscreen():
         self.searchtitle = Tkinter.Label(self.searchscreen_root, text="Search Results", bg="white", font="fixedsys")
         self.searchtitle.pack(fill=Tkinter.X)
 
-
-
-
+        # Displays a page indicating there are no results if there are no suitable listings
         if len(self.listings) == 0:
             Noresultstext = Tkinter.Label(self.searchscreen_root,text = "Sorry, there are no results available.",
                                           fg = "darkgrey",font = "fixedsys" )
@@ -276,6 +273,7 @@ class parameterscreen():
         self.pricerange.pack()
         self.pricerange.place(x=5, y=32)
 
+    
     def choosecomputerbrand(self):
 
         def hpimgchg():
@@ -486,7 +484,7 @@ class parameterscreen():
 
             self.searchtrigger = searchscreen()
             self.searchtrigger.Initialize_Searchprocess(self.pricerange.get(), self.goodreviews_onoroff, self.brandchoices)
-
+            self.searchtrigger.results_screen()
 
         # Button that triggers the search class in the search file
         searchbutton = Tkinter.Button(self.p_root, text="FIND", font="fixedsys", fg="darkgrey",
@@ -560,6 +558,13 @@ class screen():
         #
 
 # Starts the startup screen
+
 Interface1 = screen()
-Interface1.startscreen()
-Interface1.root.mainloop()
+
+def main():
+    #starts the first GUI screen
+    Interface1.startscreen()
+    Interface1.root.mainloop()
+
+if __name__ == "__main__":
+    main()
